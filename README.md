@@ -7,7 +7,7 @@
 *   **Lớp:** 22TIN-TT
 *   **Giảng viên:** Võ Thanh Vinh
 *   **Nhóm:** 4
-*   **Thành viên:** (Cập nhật tên thành viên ở đây)
+*   **Thành viên:** Nguyễn Chánh Hiệp, Nguyễn Chí Thanh, Tiêu Quang Thịnh
 
 ---
 
