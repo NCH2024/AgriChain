@@ -59,6 +59,7 @@ if __name__ == "__main__":
     nong_san_chain.them_khoi_moi("Nong dan A gieo hat")
     nong_san_chain.them_khoi_moi("Nong dan A tuoi nuoc")
     nong_san_chain.them_khoi_moi("Nong dan A bon phan")
+    nong_san_chain.them_khoi_moi("Nong dan A thu hoach")
 
     # 3. In kết quả ra màn hình
     print("\n--- KẾT QUẢ SỔ CÁI ---")
