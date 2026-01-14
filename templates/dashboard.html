@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống Quản lý AgriChain</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f6f9; }
+        .card { border: none; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
+        .nav-tabs .nav-link.active { color: #198754; font-weight: bold; border-top: 3px solid #198754; }
+        .nav-tabs .nav-link { color: #555; }
+        .status-badge { font-size: 0.85em; }
+
+        /* --- PHẦN MỚI: GIAO DIỆN MOBILE --- */
+        @media (max-width: 768px) {
+            /* 1. Ẩn tiêu đề bảng đi vì trên mobile không cần */
+            .table thead { display: none; }
+            
+            /* 2. Biến mỗi dòng tr thành một cái thẻ (Card) */
+            .table tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                background: #fff;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }
+            
+            /* 3. Căn chỉnh từng ô td */
+            .table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #eee;
+                padding: 10px 15px;
+                text-align: right;
+            }
+            
+            /* 4. Thêm nhãn (Label) phía trước mỗi thông tin để dễ hiểu */
+            .table td::before {
+                content: attr(data-label); /* Lấy dữ liệu từ thuộc tính data-label */
+                font-weight: bold;
+                color: #198754;
+                text-align: left;
+                margin-right: 15px;
+            }
+
+            /* 5. Căn chỉnh lại nút bấm cho dễ ấn */
+            .btn-sm {
+                width: 100%;
+                margin-top: 5px;
+                padding: 8px; /* Nút to hơn chút */
+            }
+            
+            /* 6. Navbar gọn lại */
+            .navbar .ms-auto {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
+        <a class="navbar-brand fw-bold" href="#"><i class="fas fa-leaf"></i> AgriChain Manager</a>
+        <div class="ms-auto d-flex align-items-center text-white">
+            <span class="me-3">
+                Xin chào, <strong>{{ user }}</strong> 
+                <span class="badge bg-light text-success ms-1">{{ session.get('role') }}</span>
+            </span>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Đăng xuất</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                            
+                            {% if session['role'] == 'farmer' %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button">🌱 Tạo Lô Mới</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" type="button">🏭 Cập Nhật</button>
+                            </li>
+                            {% else %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" type="button">🏭 Cập Nhật Quy Trình</button>
+                            </li>
+                            {% endif %}
+                            
+                        </ul>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="tab-content" id="myTabContent">
+                            
+                            {% if session['role'] == 'farmer' %}
+                            <div class="tab-pane fade show active" id="create" role="tabpanel">
+                                <form method="POST" action="/dashboard" enctype="multipart/form-data">
+                                    <input type="hidden" name="mode" value="create">
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Mã Lô Hàng (Batch Code)</label>
+                                        <input type="text" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
+                                        <div class="form-text">Mã này là duy nhất cho mỗi đợt hàng.</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Tên Nông Sản</label>
+                                        <input type="text" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Hành động khởi tạo</label>
+                                        <input type="text" name="action" class="form-control" value="Gieo trồng / Khởi tạo" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Ghi chú chi tiết</label>
+                                        <textarea name="details" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Minh chứng hình ảnh</label>
+                                        <input type="file" name="image_file" class="form-control" accept="image/*">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-plus-circle"></i> Tạo Lô Hàng Mới</button>
+                                </form>
+                            </div>
+                            {% endif %}
+
+                            <div class="tab-pane fade {% if session['role'] != 'farmer' %}show active{% endif %}" id="update" role="tabpanel">
+                                <div class="alert alert-info py-2 small">
+                                    <i class="fas fa-info-circle"></i> Nhập đúng <b>Mã Lô Hàng</b> cũ để nối tiếp quy trình.
+                                </div>
+                                <form method="POST" action="/dashboard" enctype="multipart/form-data">
+                                    <input type="hidden" name="mode" value="update">
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Nhập Mã Lô Hàng Cần Cập Nhật</label>
+                                        <input type="text" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Hành động tiếp theo</label>
+                                        <select name="action" class="form-select">
+                                            {% if session['role'] == 'farmer' %}
+                                                <option value="Chăm sóc / Tưới nước">Chăm sóc / Tưới nước</option>
+                                                <option value="Bón phân">Bón phân</option>
+                                                <option value="Phun thuốc sinh học">Phun thuốc sinh học</option>
+                                                <option value="Thu hoạch">Thu hoạch</option>
+                                                <option value="Chuyển cho nhà máy">Chuyển cho nhà máy</option>
+                                            {% else %}
+                                                <option value="Nhập kho nguyên liệu">Nhập kho nguyên liệu</option>
+                                                <option value="Sơ chế / Rửa sạch">Sơ chế / Rửa sạch</option>
+                                                <option value="Đóng gói bao bì">Đóng gói bao bì</option>
+                                                <option value="Dán tem truy xuất">Dán tem truy xuất</option>
+                                                <option value="Vận chuyển siêu thị">Vận chuyển siêu thị</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Chi tiết hoạt động</label>
+                                        <textarea name="details" class="form-control" rows="3"></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Minh chứng hình ảnh</label>
+                                        <input type="file" name="image_file" class="form-control" accept="image/*">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">              
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-white fw-bold text-success">
+                                <i class="fas fa-chart-pie"></i> Thống kê Sản lượng
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 250px; width: 100%; display: flex; justify-content: center;">
+                                    <canvas id="myChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-success"><i class="fas fa-list"></i> Danh sách Nông sản của tôi</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> Làm mới</button>
+
+                        <button onclick="kiemTraHack()" class="btn btn-danger ms-2">
+                            <i class="fas fa-shield-alt"></i> Kiểm tra An toàn
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã Lô (Batch ID)</th>
+                                        <th>Loại Sản Phẩm</th>
+                                        <th>Trạng Thái Mới Nhất</th>
+                                        <th>Thời gian</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if products %}
+                                        {% for item in products %}
+                                        <tr>
+                                            <td data-label="Mã Lô:">
+                                                <span class="badge bg-dark">{{ item.batch_code }}</span>
+                                            </td>
+                                            <td data-label="Sản phẩm:" class="fw-bold">
+                                                {{ item.product_type }}
+                                            </td>
+                                            <td data-label="Trạng thái:">
+                                                <span class="badge bg-info text-dark status-badge">{{ item.action }}</span>
+                                            </td>
+                                            <td data-label="Thời gian:" class="small text-muted">
+                                                {{ item.timestamp }}
+                                            </td>
+                                            <td data-label="Thao tác:">
+                                                <div class="d-grid gap-2 d-md-block">
+                                                    <form action="/" method="POST" target="_blank" style="display:inline;">
+                                                        <input type="hidden" name="search_code" value="{{ item.batch_code }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i> Xem
+                                                        </button>
+                                                    </form>
+                                                    
+                                                    <a href="/generate_qr/{{ item.batch_code }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                                                        <i class="fas fa-qrcode"></i> QR
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                Chưa có dữ liệu. Hãy tạo mới!
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Lấy dữ liệu từ Python truyền sang (Server-side rendering)
+        // Lưu ý: Dùng filter | tojson để biến list Python thành mảng Javascript an toàn
+        const labels = {{ chart_labels | tojson }};
+        const data = {{ chart_data | tojson }};
+
+        // Nếu chưa có dữ liệu thì không vẽ để tránh lỗi
+        if (labels.length > 0) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut', // Loại biểu đồ: 'pie' (tròn), 'bar' (cột), 'doughnut' (bánh donut)
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng lô hàng',
+                        data: data,
+                        backgroundColor: [
+                            '#198754', // Xanh lá cây
+                            '#ffc107', // Vàng
+                            '#0d6efd', // Xanh dương
+                            '#dc3545', // Đỏ
+                            '#6c757d'  // Xám
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Để nó tự co giãn theo khung div bên ngoài
+                    plugins: {
+                        legend: {
+                            position: 'right', // Chú thích nằm bên phải cho đẹp
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('myChart').parentNode.innerHTML = "<p class='text-muted text-center pt-5'>Chưa có dữ liệu để vẽ biểu đồ.</p>";
+        }
+        async function kiemTraHack() {
+            // Hiện loading cho chuyên nghiệp
+            Swal.fire({
+                title: 'Đang quét Blockchain...',
+                html: 'Hệ thống đang tính toán lại toàn bộ mã Hash.',
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch('/validate_chain');
+            const data = await response.json();
+            
+            // Tắt loading
+            Swal.close();
+
+            if (data.status == "An toàn") {
+                // Thông báo đẹp màu xanh
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Hệ thống An toàn!',
+                    text: 'Tất cả dữ liệu đều toàn vẹn và khớp với chữ ký số.',
+                    confirmButtonColor: '#198754'
+                });
+            } else {
+                // CẢNH BÁO ĐỎ + NÚT KHÔI PHỤC
+                Swal.fire({
+                    icon: 'error',
+                    title: 'PHÁT HIỆN TẤN CÔNG!',
+                    html: `
+                        Dữ liệu tại <b>Block #${data.error_block}</b> đã bị thay đổi trái phép!<br>
+                        Mã Hash không trùng khớp.
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '🛠️ Khôi phục ngay',
+                    cancelButtonText: 'Bỏ qua',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    // Nếu người dùng bấm nút Khôi phục
+                    if (result.isConfirmed) {
+                        khoiPhucBlock(data.error_block);
+                    }
+                });
+            }
+        }
+
+        // HÀM GỌI API KHÔI PHỤC
+        async function khoiPhucBlock(index) {
+            const response = await fetch('/recover_chain', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ block_index: index })
+            });
+            const result = await response.json();
+
+            if (result.status == 'success') {
+                Swal.fire(
+                    'Đã khôi phục!',
+                    'Dữ liệu gốc đã được lấy lại từ Node Backup.',
+                    'success'
+                ).then(() => {
+                    location.reload(); // Tải lại trang để thấy dữ liệu đúng
+                });
+            } else {
+                Swal.fire('Lỗi', 'Không thể khôi phục.', 'error');
+            }
+        }
+    </script>
+    </body>
+</html>
+</body>
+</html>

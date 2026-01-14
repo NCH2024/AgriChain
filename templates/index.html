@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Truy xuất Nông sản</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section { background: linear-gradient(to right, #4e9f3d, #1e5128); color: white; padding: 100px 0; text-align: center; }
+        .timeline-item { border-left: 2px solid #4e9f3d; padding-left: 20px; margin-bottom: 20px; position: relative; }
+        .timeline-item::before { content: ''; width: 12px; height: 12px; background: #4e9f3d; position: absolute; left: -7px; top: 5px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light px-4">
+        <span class="navbar-brand fw-bold text-success">🌱 AgriChain</span>
+        <a href="/login" class="btn btn-outline-success">Đăng nhập (Nhà nông/Nhà máy)</a>
+    </nav>
+
+    <div class="hero-section">
+        <h1>Tra cứu nguồn gốc nông sản</h1>
+        <p>Minh bạch - An toàn - Chính xác</p>
+        <form method="POST" class="d-flex justify-content-center mt-4">
+            <input type="text" name="search_code" class="form-control w-50" placeholder="Nhập mã lô hàng (VD: 8930001)..." required>
+            <button type="submit" class="btn btn-warning ms-2">🔍 Tra cứu</button>
+        </form>
+    </div>
+
+    {% if ket_qua %}
+    <div class="container mt-5">
+        <h3 class="text-center mb-4">Lịch sử Lô hàng: {{ ket_qua[0].batch_code }}</h3>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                {% for block in ket_qua %}
+                <div class="timeline-item">
+                    <span class="badge bg-success">{{ block.timestamp | ctime }}</span>
+                    <h5>{{ block.action }}</h5> <p><strong>Thực hiện bởi:</strong> {{ block.owner }} ({{ block.product_type }})</p>
+                    <p class="text-muted small">
+                        {{ block.details }}
+                        
+                        {% if '[Ảnh:' in block.details %}
+                            <br>
+                            <div class="mt-2">
+                                <strong>📸 Ảnh hiện trường:</strong><br>
+                                {% set ten_anh = block.details.split('[Ảnh: ')[1].split(']')[0] %}
+                                <img src="{{ url_for('static', filename='uploads/' + ten_anh) }}" 
+                                    class="img-fluid rounded border mt-1" 
+                                    style="max-width: 300px;">
+                            </div>
+                        {% endif %}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
