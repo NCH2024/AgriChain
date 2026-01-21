@@ -4,56 +4,167 @@ from web3 import Web3
 
 # --- CẤU HÌNH KẾT NỐI (Em điền thông tin vào đây) ---
 CRONOS_RPC = "https://evm-t3.cronos.org"
-CONTRACT_ADDRESS = "0x8C3449A80f4A6BB197A35D46F402eE1A3473FFe1"
-MY_WALLET_ADDRESS = "0x8d97B8068B83B7F494140593fbaF5586FEE056ae"
-MY_PRIVATE_KEY = "ab282bc97ae0af877f9113c089667be52ecd906dbad435f705ed97aac1013110"
+CONTRACT_ADDRESS = "0xDbBB8157E67BCaF44136455Cd74e7503B225B4f9" #địa chỉ của contracts
+MY_WALLET_ADDRESS = "0x8d97B8068B83B7F494140593fbaF5586FEE056ae" # địa chỉ của ví
+MY_PRIVATE_KEY = "ab282bc97ae0af877f9113c089667be52ecd906dbad435f705ed97aac1013110" # khóa bí mật của ví
 
 # ABI em vừa gửi (Thầy đã dán sẵn vào đây cho em)
 CONTRACT_ABI = [
-	{
-		"anonymous": False,
-		"inputs": [
-			{"indexed": True, "internalType": "string", "name": "batch_code", "type": "string"},
-			{"indexed": True, "internalType": "address", "name": "owner", "type": "address"},
-			{"indexed": False, "internalType": "uint256", "name": "timestamp", "type": "uint256"}
-		],
-		"name": "GhiNhatKyMoi",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{"internalType": "string", "name": "_batch_code", "type": "string"},
-			{"internalType": "string", "name": "_product_type", "type": "string"},
-			{"internalType": "string", "name": "_action", "type": "string"},
-			{"internalType": "string", "name": "_details", "type": "string"}
-		],
-		"name": "themNhatKy",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "laySoLuong",
-		"outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [{"internalType": "uint256", "name": "_index", "type": "uint256"}],
-		"name": "layThongTin",
-		"outputs": [
-			{"internalType": "string", "name": "", "type": "string"},
-			{"internalType": "string", "name": "", "type": "string"},
-			{"internalType": "string", "name": "", "type": "string"},
-			{"internalType": "string", "name": "", "type": "string"},
-			{"internalType": "uint256", "name": "", "type": "uint256"},
-			{"internalType": "address", "name": "", "type": "address"}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-]
+    {
+      "anonymous": False,
+      "inputs": [
+        {
+          "indexed": True,
+          "internalType": "string",
+          "name": "batch_code",
+          "type": "string"
+        },
+        {
+          "indexed": True,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": False,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "GhiNhatKyMoi",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "danhSachNhatKy",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "batch_code",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "product_type",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "action",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "details",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "laySoLuong",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "layThongTin",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_batch_code",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_product_type",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_action",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_details",
+          "type": "string"
+        }
+      ],
+      "name": "themNhatKy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
 
 # Khởi tạo kết nối
 w3 = Web3(Web3.HTTPProvider(CRONOS_RPC))

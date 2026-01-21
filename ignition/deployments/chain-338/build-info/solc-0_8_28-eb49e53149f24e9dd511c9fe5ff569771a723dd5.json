@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-eb49e53149f24e9dd511c9fe5ff569771a723dd5",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/AgriChain.sol": "project/contracts/AgriChain.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/AgriChain.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\ncontract AgriChain {\r\n    \r\n    // 1. Định nghĩa cấu trúc lô hàng (Giống class Block trong file blockchain.py cũ)\r\n    struct LoHang {\r\n        string batch_code;    // Mã lô hàng\r\n        string product_type;  // Loại sản phẩm\r\n        string action;        // Hành động\r\n        string details;       // Chi tiết (link ảnh, ghi chú)\r\n        uint256 timestamp;    // Thời gian\r\n        address owner;        // Ví của người ghi (Nông dân/Nhà máy)\r\n    }\r\n\r\n    // 2. Danh sách lưu trữ (Thay thế MongoDB)\r\n    LoHang[] public danhSachNhatKy;\r\n\r\n    // Sự kiện để thông báo ra ngoài (Web bắt được cái này)\r\n    event GhiNhatKyMoi(string indexed batch_code, address indexed owner, uint256 timestamp);\r\n\r\n    // 3. Hàm Ghi Nhật Ký (Thay thế hàm them_block_moi trong Python)\r\n    function themNhatKy(\r\n        string memory _batch_code, \r\n        string memory _product_type, \r\n        string memory _action, \r\n        string memory _details\r\n    ) public {\r\n        LoHang memory loMoi = LoHang({\r\n            batch_code: _batch_code,\r\n            product_type: _product_type,\r\n            action: _action,\r\n            details: _details,\r\n            timestamp: block.timestamp, // Lấy giờ của mạng Blockchain\r\n            owner: msg.sender           // Lấy địa chỉ ví người đang bấm nút\r\n        });\r\n\r\n        danhSachNhatKy.push(loMoi);\r\n        emit GhiNhatKyMoi(_batch_code, msg.sender, block.timestamp);\r\n    }\r\n\r\n    // 4. Hàm lấy tổng số lượng bản ghi\r\n    function laySoLuong() public view returns (uint256) {\r\n        return danhSachNhatKy.length;\r\n    }\r\n\r\n    // 5. Hàm lấy chi tiết một bản ghi\r\n    function layThongTin(uint256 _index) public view returns (\r\n        string memory, string memory, string memory, string memory, uint256, address\r\n    ) {\r\n        LoHang memory lo = danhSachNhatKy[_index];\r\n        return (\r\n            lo.batch_code, \r\n            lo.product_type, \r\n            lo.action, \r\n            lo.details, \r\n            lo.timestamp, \r\n            lo.owner\r\n        );\r\n    }\r\n}"
+      }
+    }
+  }
+}
