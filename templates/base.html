@@ -4,9 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AgriChain - {% block title %}Hệ thống Nông nghiệp 4.0{% endblock %}</title>
+    <link rel="icon" href="/static/image/block.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <meta property="og:title" content="AgriChain - Hệ thống Nông nghiệp 4.0">
+    <meta property="og:description" content="Hệ thống truy xuất nguồn gốc nông sản ứng dụng công nghệ Blockchain tiên tiến, đảm bảo sự minh bạch từ nông trại đến bàn ăn.">
+    <meta property="og:image" content="https://agri-chain-beige.vercel.app/static/image/preview.png">
+    <meta property="og:url" content="https://agri-chain-beige.vercel.app">
+    <meta property="og:type" content="website">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
