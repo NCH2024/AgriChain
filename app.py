@@ -23,6 +23,8 @@ cloudinary.config(
 db = DatabaseManager()
 register_wallet_routes(app, db)
 
+BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
+
 @app.template_filter('ctime')
 def timectime(s):
     try:
