@@ -1,165 +1,237 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AgriChain - Tra cứu nguồn gốc</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .hero{
-      background: linear-gradient(180deg,#2e7d32,#1b5e20);
-      color:#fff;
-      padding:80px 0;
-    }
-    .product-grid{
-      display:grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap:16px;
-    }
-    @media (max-width: 1200px){ .product-grid{ grid-template-columns: repeat(4, 1fr);} }
-    @media (max-width: 992px){  .product-grid{ grid-template-columns: repeat(3, 1fr);} }
-    @media (max-width: 768px){  .product-grid{ grid-template-columns: repeat(2, 1fr);} }
-    @media (max-width: 420px){  .product-grid{ grid-template-columns: repeat(1, 1fr);} }
+{% extends "base.html" %}
 
-    .p-card{
-      border:1px solid #eee;
-      border-radius:14px;
-      overflow:hidden;
-      background:#fff;
-      box-shadow: 0 6px 18px rgba(0,0,0,.06);
-      transition: transform .12s ease, box-shadow .12s ease;
-      cursor:pointer;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-    }
-    .p-card:hover{ transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.10); }
-    .p-media{
-      width:100%;
-      aspect-ratio: 1/1;
-      background: #f3f7f4;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:14px;
-    }
-    .p-media img{
-      max-width:100%;
-      max-height:100%;
-      object-fit:contain;
-      border-radius:10px;
-      background:#fff;
-      padding:8px;
-    }
-    .p-body{ padding:12px; display:flex; flex-direction:column; gap:6px; flex:1;}
-    .p-title{
-      font-size:14px; font-weight:700; line-height:1.25;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-      min-height: 34px;
-    }
-    .p-sub{ font-size:12px; color:#6b7280; display:flex; justify-content:space-between; gap:8px; }
-    .btn-detail{ width:100%; border-radius:10px; font-weight:700; }
-  </style>
-</head>
-<body class="bg-light">
+{% block title %}Trang chủ{% endblock %}
 
-  <nav class="navbar navbar-light bg-white border-bottom">
-    <div class="container">
-      <a class="navbar-brand fw-bold text-success" href="/">🌱 AgriChain</a>
-      <a class="btn btn-outline-success" href="/login">Đăng nhập (Nhà nông/Nhà máy)</a>
-    </div>
-  </nav>
+{% block banner %}
+<div class="container-fluid py-5 position-relative overflow-hidden d-flex align-items-center" style="min-height: 600px;">
+    
+    <div id="heroCarousel" class="carousel slide carousel-fade position-absolute top-0 start-0 w-100 h-100" 
+         data-bs-ride="carousel" data-bs-interval="4000" style="z-index: 0; opacity: 0.3;">
+        <div class="carousel-inner h-100">
+    
+            {% if slideshow_images %}
+                
+                {% for img_name in slideshow_images %}
+                <div class="carousel-item h-100 {% if loop.first %}active{% endif %}">
+                    <img src="{{ url_for('static', filename='slideshow/' + img_name) }}" 
+                        class="d-block w-100 h-100 object-fit-cover"
+                        alt="Slide {{ loop.index }}">
+                </div>
+                {% endfor %}
 
-  <section class="hero">
-    <div class="container text-center">
-      <h1 class="fw-bold">Tra cứu nguồn gốc nông sản</h1>
-      <div class="opacity-75 mb-4">Minh bạch - An toàn - Chính xác</div>
+            {% else %}
+                
+                <div class="carousel-item active h-100">
+                    <img src="https://images.unsplash.com/photo-1625246333195-031200956307?auto=format&fit=crop&w=1920&q=80" 
+                        class="d-block w-100 h-100 object-fit-cover">
+                </div>
 
-      <form class="row justify-content-center g-2" method="POST" action="/">
-        <div class="col-12 col-md-8">
-          <input class="form-control form-control-lg" name="search_code"
-                 placeholder="Nhập mã lô hàng (VD: 8930001)..." />
+            {% endif %}
+
         </div>
-        <div class="col-12 col-md-2 d-grid">
-          <button class="btn btn-warning btn-lg fw-bold" type="submit">🔎 Tra cứu</button>
-        </div>
-      </form>
     </div>
-  </section>
 
-  <div class="container my-4">
+    <div class="container text-center position-relative" style="z-index: 2;">
+        <span class="badge bg-white border border-secondary text-lemon navbar-glass shadow-sm px-3 py-2 mb-3 rounded-pill animate__animated animate__fadeInDown">
+            Nền tảng truy xuất nguồn gốc 4.0
+        </span>
+        
+        <h1 class="display-3 fw-bold mb-3 animate__animated animate__fadeInUp ">
+            Nông Sản Sạch <br>
+            <span class="text-lemon" style="background: linear-gradient(120deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Minh Bạch Trên Blockchain
+            </span>
+        </h1>
+        
+        <p class="lead text-dark mb-5 mx-auto animate__animated animate__fadeInUp animate__delay-1s fw-medium" style="max-width: 700px;">
+            Mỗi sản phẩm là một câu chuyện. Hãy quét mã để kiểm chứng hành trình từ nông trại đến bàn ăn với độ tin cậy tuyệt đối.
+        </p>
+        
+        <div class="row justify-content-center animate__animated animate__fadeInUp animate__delay-1s">
+            <div class="col-md-8 col-lg-6">
+                <form method="POST" action="/" class="glass-box p-2 d-flex align-items-center shadow-lg" style="border-radius: 50px; padding: 10px !important; background: rgba(255,255,255,0.95);">
+                    <i class="fas fa-search text-muted ms-3 fs-5"></i>
+                    <input type="text" name="search_code" class="form-control border-0 bg-transparent shadow-none" 
+                           placeholder="Nhập mã lô hàng (VD: RAU_001)..." 
+                           style="font-size: 1.1rem; height: 50px;">
+                    <button type="submit" class="btn btn-lemon rounded-pill px-4 py-2 ms-2">
+                        Tra Cứu
+                    </button>
+                </form>
+                <div class="mt-3 text-dark small">
+                    <i class="fas fa-info-circle me-1"></i> Thử các mã: <span class="fw-bold cursor-pointer">RAU_001</span>, <span class="fw-bold">GAO_ST25</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-    {% if ket_qua is not none %}
-      <div class="card shadow-sm mb-3">
-        <div class="card-body">
-          <h5 class="mb-3">Kết quả tra cứu</h5>
-
-          {% if ket_qua|length == 0 %}
-            <div class="text-muted">Không tìm thấy mã lô này trên blockchain.</div>
-          {% else %}
-            <div class="table-responsive">
-              <table class="table table-sm align-middle">
-                <thead>
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
-                    <th>Chi tiết</th>
-                    <th>Owner</th>
-                    <th></th>
-                  </tr>
+{% block content %}
+<div class="container pb-5">
+    
+    {% if ket_qua %}
+    <div class="glass-box mb-5 border-success" style="border-left: 5px solid var(--accent-color);">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-lemon mb-0"><i class="fas fa-check-circle me-2"></i>Kết quả tìm kiếm</h4>
+            <span class="badge bg-light text-dark border">Found {{ ket_qua|length }} records</span>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-3">Mã Lô</th>
+                        <th>Hình ảnh</th>
+                        <th>Loại SP</th>
+                        <th>Hành động</th>
+                        <th>Thời gian</th>
+                    </tr>
                 </thead>
                 <tbody>
-                  {% for h in ket_qua %}
-                  <tr>
-                    <td class="small">{{ h.timestamp_fmt if h.timestamp_fmt else (h.timestamp|ctime) }}</td>
-                    <td><b>{{ h.action }}</b></td>
-                    <td>{{ h.details }}</td>
-                    <td class="small text-muted">{{ h.owner }}</td>
-                    <td class="text-end">
-                      <a class="btn btn-success btn-sm" href="/trace/{{ h.batch_code }}">Xem chi tiết</a>
-                    </td>
-                  </tr>
-                  {% endfor %}
+                    {% for item in ket_qua %}
+                    <tr>
+                        <td class="fw-bold ps-3 text-primary">{{ item.batch_code }}</td>
+                        <td>
+                            {% if item.image_id %}
+                                <img src="/image/{{ item.image_id }}" class="shadow-sm border" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted border" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold">{{ item.product_type }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ item.action }}</span></td>
+                        <td class="small text-muted">{{ item.timestamp_fmt }}</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
-              </table>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-end mb-4 mt-5">
+        <div>
+            <h6 class="text-lemon text-uppercase mb-1">Realtime Feed</h6>
+            <h3 class="fw-bold mb-0">Lô hàng mới cập nhật</h3>
+        </div>
+        <a href="#" class="text-muted small text-decoration-none hover-primary">
+            Cập nhật tự động <i class="fas fa-sync-alt ms-1 animate__animated animate__spin"></i>
+        </a>
+    </div>
+
+    <div class="row g-4" id="product-list">
+        {% for p in products %}
+        <div class="col-md-6 col-lg-3 product-item {% if loop.index > 8 %}d-none{% endif %}">
+            <div class="glass-box h-100 p-0 overflow-hidden group-hover-effect border-0 shadow-sm hover-shadow-lg transition-all">
+                <div class="position-relative bg-light" style="height: 180px;">
+                    {% if p.image_id %}
+                        <img src="/image/{{ p.image_id }}" class="w-100 h-100 object-fit-cover transition-transform">
+                    {% else %}
+                        <img src="/static/image/blockchain.gif" class="opacity-25 w-75 h-75 object-fit-container position-absolute top-50 start-50 translate-middle">
+                       
+                    {% endif %}
+                    
+                    <span class="position-absolute top-0 start-0 m-3 badge bg-white text-dark shadow-sm border">
+                        {{ p.batch_code }}
+                    </span>
+                    <span class="position-absolute bottom-0 end-0 m-3 badge bg-black shadow-sm" style="font-size: 0.7rem;">
+                        {{ p.timestamp_fmt }}
+                    </span>
+                </div>
+                
+                <div class="p-4">
+                    <h6 class="fw-bold text-dark mb-1 text-truncate">{{ p.product_type }}</h6>
+                    <p class="text-lemon small mb-3 fw-bold">{{ p.action }}</p>
+                    
+                    <a href="/trace/{{ p.batch_code }}" class="btn btn-outline-lemon w-100 btn-sm rounded-pill">
+                        Xem chi tiết
+                    </a>
+                </div>
             </div>
-          {% endif %}
         </div>
-      </div>
-    {% endif %}
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">🧺 Tất cả lô hàng</h5>
-      <div class="text-muted small">Tổng: {{ products|length }}</div>
+        {% endfor %}
     </div>
 
-    {% if products|length == 0 %}
-      <div class="alert alert-warning">Chưa có lô hàng nào trên blockchain.</div>
+    {% if products|length > 8 %}
+    <div class="text-center mt-5">
+        <button id="btn-load-more" class="btn btn-white border shadow-sm px-5 py-2 rounded-pill text-muted hover-primary">
+            Xem thêm {{ products|length - 8 }} lô hàng nữa <i class="fas fa-arrow-down ms-2"></i>
+        </button>
+    </div>
     {% endif %}
 
-    <div class="product-grid">
-      {% for p in products %}
-      <div class="p-card" onclick="window.location.href='/trace/{{ p.batch_code }}'">
-        <div class="p-media">
-          <img src="/generate_qr/{{ p.batch_code }}" alt="QR {{ p.batch_code }}">
+    <div class="mt-5 pt-5">
+        <div class="glass-box p-0 overflow-hidden shadow-lg border-0">
+            <div class="row g-0">
+                <div class="col-lg-6 p-5 d-flex flex-column justify-content-center bg-white">
+                    <span class="text-lemon fw-bold text-uppercase mb-2">Về AgriChain</span>
+                    <h2 class="fw-bold mb-4 text-dark">Kết nối niềm tin nông nghiệp</h2>
+                    <p class="text-muted mb-4">
+                        Chúng tôi áp dụng công nghệ Blockchain tiên tiến nhất để số hoá toàn bộ quy trình canh tác. 
+                        Dữ liệu được ghi nhận minh bạch, không thể sửa đổi, mang lại sự an tâm tuyệt đối cho người tiêu dùng.
+                        Minh bạch trong cách thức logistics, truy xuất nguồn gốc dễ dàng chỉ với vài thao tác quét mã QR.
+                        "Một lần tin tưởng, mãi mãi an tâm" - đó là cam kết của chúng tôi đối với khách hàng.
+                    </p>
+                    
+                    <div class="d-flex gap-4 mt-2">
+                        <div class="text-center">
+                            <h4 class="fw-bold text-dark mb-0">100%</h4>
+                            <small class="text-muted">Minh bạch</small>
+                        </div>
+                        <div class="text-center border-start ps-4">
+                            <h4 class="fw-bold text-dark mb-0">24/7</h4>
+                            <small class="text-muted">Truy xuất</small>
+                        </div>
+                        <div class="text-center border-start ps-4">
+                            <h4 class="fw-bold text-dark mb-0">AI</h4>
+                            <small class="text-muted">Giám sát</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 position-relative min-vh-50">
+                    <img src="/static/image/intro.jpg" 
+                         alt="Smart Farm" 
+                         class="w-100 h-100 object-fit-cover absolute-full">
+                    <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(6, 95, 70, 0.2);"></div>
+                </div>
+            </div>
         </div>
-        <div class="p-body">
-          <div class="p-title">{{ p.product_type }} • Mã lô {{ p.batch_code }}</div>
-          <div class="p-sub">
-            <span>Owner: {{ (p.owner|string)[:10] }}...</span>
-            <span>{{ p.timestamp_fmt }}</span>
-          </div>
-          <div class="small text-muted">Trạng thái: <b class="text-dark">{{ p.action }}</b></div>
-          <a class="btn btn-success btn-sm btn-detail mt-2"
-             href="/trace/{{ p.batch_code }}" onclick="event.stopPropagation();">
-            Chi tiết truy xuất
-          </a>
-        </div>
-      </div>
-      {% endfor %}
     </div>
+</div>
 
-  </div>
+<style>
+    /* CSS bổ trợ cục bộ cho hiệu ứng */
+    .hover-shadow-lg:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    }
+    .transition-all { transition: all 0.3s ease; }
+    .transition-transform { transition: transform 0.5s ease; }
+    .group-hover-effect:hover .transition-transform { transform: scale(1.05); }
+    .cursor-pointer { cursor: pointer; }
+</style>
+{% endblock %}
 
-</body>
-</html>
+{% block scripts %}
+<script>
+    // Giữ nguyên logic nút Xem thêm
+    const btnLoadMore = document.getElementById('btn-load-more');
+    if (btnLoadMore) {
+        btnLoadMore.addEventListener('click', function() {
+            const hiddenItems = document.querySelectorAll('.product-item.d-none');
+            hiddenItems.forEach(item => {
+                item.classList.remove('d-none');
+                // Hiệu ứng fade in đơn giản
+                item.style.opacity = 0;
+                setTimeout(() => item.style.opacity = 1, 50);
+                item.style.transition = 'opacity 0.5s';
+            });
+            this.style.display = 'none';
+        });
+    }
+</script>
+{% endblock %}

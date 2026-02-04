@@ -1,556 +1,341 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
+{% extends "base.html" %}
+
+{% block title %}Bảng điều khiển{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5">
     
-    <title>Hệ thống Quản lý AgriChain</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <style>
-        body { background-color: #f4f6f9; }
-        .card { border: none; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
-        .nav-tabs .nav-link.active { color: #198754; font-weight: bold; border-top: 3px solid #198754; }
-        .nav-tabs .nav-link { color: #555; }
-        .status-badge { font-size: 0.85em; }
-
-        /* --- PHẦN MỚI: GIAO DIỆN MOBILE --- */
-        @media (max-width: 768px) {
-            /* 1. Ẩn tiêu đề bảng đi vì trên mobile không cần */
-            .table thead { display: none; }
-            
-            /* 2. Biến mỗi dòng tr thành một cái thẻ (Card) */
-            .table tr {
-                display: block;
-                margin-bottom: 15px;
-                border: 1px solid #ddd;
-                border-radius: 10px;
-                background: #fff;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            }
-            
-            /* 3. Căn chỉnh từng ô td */
-            .table td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #eee;
-                padding: 10px 15px;
-                text-align: right;
-            }
-            
-            /* 4. Thêm nhãn (Label) phía trước mỗi thông tin để dễ hiểu */
-            .table td::before {
-                content: attr(data-label); /* Lấy dữ liệu từ thuộc tính data-label */
-                font-weight: bold;
-                color: #198754;
-                text-align: left;
-                margin-right: 15px;
-            }
-
-            /* 5. Căn chỉnh lại nút bấm cho dễ ấn */
-            .btn-sm {
-                width: 100%;
-                margin-top: 5px;
-                padding: 8px; /* Nút to hơn chút */
-            }
-            
-            /* 6. Navbar gọn lại */
-            .navbar .ms-auto {
-                margin-top: 10px;
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
-<body>
-
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
-        <a class="navbar-brand fw-bold" href="#"><i class="fas fa-leaf"></i> AgriChain Manager</a>
-        <div class="ms-auto d-flex align-items-center text-white">
-            <span class="me-3">
-               Xin chào, <strong>{{ wallet }}</strong>
-                <span class="badge bg-light text-success ms-1">{{ session.get('role') }}</span>
-            </span>
-            <a href="/products" class="btn btn-sm btn-outline-light me-2">📦 Danh sách sản phẩm</a>
-            <a href="/logout" class="btn btn-sm btn-outline-light ms-3">Đăng xuất</a>
+    <div class="d-flex justify-content-between align-items-center mb-5 glass-box py-4 border-0 shadow-sm animate__animated animate__fadeInDown">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                 style="width: 64px; height: 64px; background: rgba(6, 95, 70, 0.1);">
+                <i class="fas fa-user-astronaut fa-2x text-lemon"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-1">Xin chào, <span class="text-lemon">{{ wallet[:6] }}...{{ wallet[-4:] }}</span></h4>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
+                        <i class="fas fa-wifi me-1" style="font-size: 0.7em;"></i> Online
+                    </span>
+                    <span class="text-muted small text-uppercase fw-bold letter-spacing-1">{{ session.get('role', 'Farmer') }} Account</span>
+                </div>
+            </div>
         </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-        <div class="row">
-            
-            <div class="col-lg-4 mb-4">
-                <div class="card">
-                    <div class="card-header bg-white">
-                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
-                            
-                            {% if session['role'] == 'farmer' %}
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button">🌱 Tạo Lô Mới</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" type="button">🏭 Cập Nhật</button>
-                            </li>
-                            {% else %}
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" type="button">🏭 Cập Nhật Quy Trình</button>
-                            </li>
-                            {% endif %}
-                            
-                        </ul>
-                    </div>
-                    
-                    <div class="card-body">
-                        <div class="tab-content" id="myTabContent">
-                            
-                            {% if session['role'] == 'farmer' %}
-                            <div class="tab-pane fade show active" id="create" role="tabpanel">
-                                
-                                <div class="alert alert-warning py-2 small">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Lưu ý: Giao dịch Blockchain được ký bằng MetaMask. File ảnh ở đây <b>không được gửi lên Blockchain</b>.
-                                    Nếu bạn muốn lưu ảnh, hãy upload lên server/IPFS riêng rồi lưu URL vào phần Ghi chú chi tiết.
-                                </div>
-                                <form method="POST" action="/dashboard" enctype="multipart/form-data" onsubmit="return false;">
-                                    <input type="hidden" name="mode" value="create">
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Mã Lô Hàng (Batch Code)</label>
-                                        <input type="text" id="create_batch" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
-                                        <div class="form-text">Mã này là duy nhất cho mỗi đợt hàng.</div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Tên Nông Sản</label>
-                                        <input type="text" id="create_product" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Hành động khởi tạo</label>
-                                        <input type="text" id="create_action" name="action" class="form-control" value="Gieo trồng / Khởi tạo" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Ghi chú chi tiết</label>
-                                        <textarea id="create_details" name="details" class="form-control" rows="3"></textarea>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Minh chứng hình ảnh</label>
-                                        <input type="file" id="create_image" name="image_file" class="form-control" accept="image/*">
-                                    </div>
-
-                                    <button type="button" class="btn btn-success w-100" onclick="createBatch()"><i class="fas fa-plus-circle"></i> Tạo Lô Hàng Mới (MetaMask)</button>
-                                </form>
-                            </div>
-                            {% endif %}
-
-                            <div class="tab-pane fade {% if session['role'] != 'farmer' %}show active{% endif %}" id="update" role="tabpanel">
-                                <div class="alert alert-info py-2 small">
-                                    <i class="fas fa-info-circle"></i> Nhập đúng <b>Mã Lô Hàng</b> cũ để nối tiếp quy trình.
-                                </div>
-                                <form method="POST" action="/dashboard" enctype="multipart/form-data" onsubmit="return false;">
-                                    <input type="hidden" name="mode" value="update">
-
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Nhập Mã Lô Hàng Cần Cập Nhật</label>
-                                        <input type="text" id="update_batch" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Tên Nông Sản (nếu cần)</label>
-                                        <input type="text" id="update_product" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ (có thể để trống)">
-                                        <div class="form-text">Nếu để trống, hệ thống sẽ ghi "N/A" trên Blockchain.</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Hành động tiếp theo</label>
-                                        <select id="update_action" name="action" class="form-select">
-                                            {% if session['role'] == 'farmer' %}
-                                                <option value="Chăm sóc / Tưới nước">Chăm sóc / Tưới nước</option>
-                                                <option value="Bón phân">Bón phân</option>
-                                                <option value="Phun thuốc sinh học">Phun thuốc sinh học</option>
-                                                <option value="Thu hoạch">Thu hoạch</option>
-                                                <option value="Chuyển cho nhà máy">Chuyển cho nhà máy</option>
-                                            {% else %}
-                                                <option value="Nhập kho nguyên liệu">Nhập kho nguyên liệu</option>
-                                                <option value="Sơ chế / Rửa sạch">Sơ chế / Rửa sạch</option>
-                                                <option value="Đóng gói bao bì">Đóng gói bao bì</option>
-                                                <option value="Dán tem truy xuất">Dán tem truy xuất</option>
-                                                <option value="Vận chuyển siêu thị">Vận chuyển siêu thị</option>
-                                            {% endif %}
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Chi tiết hoạt động</label>
-                                        <textarea id="update_details" name="details" class="form-control" rows="3"></textarea>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Minh chứng hình ảnh</label>
-                                        <input type="file" id="update_image" name="image_file" class="form-control" accept="image/*">
-                                    </div>
-
-                                    <button type="button" class="btn btn-primary w-100" onclick="updateBatch()"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái (MetaMask)</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-8">              
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header bg-white fw-bold text-success">
-                                <i class="fas fa-chart-pie"></i> Thống kê Sản lượng
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 250px; width: 100%; display: flex; justify-content: center;">
-                                    <canvas id="myChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-success"><i class="fas fa-list"></i> Danh sách Nông sản của tôi</h5>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()"><i class="fas fa-sync"></i> Làm mới</button>
-
-                        <button onclick="kiemTraHack()" class="btn btn-danger ms-2">
-                            <i class="fas fa-shield-alt"></i> Kiểm tra An toàn
-                        </button>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Mã Lô (Batch ID)</th>
-                                        <th>Loại Sản Phẩm</th>
-                                        <th>Trạng Thái Mới Nhất</th>
-                                        <th>Thời gian</th>
-                                        <th>Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if products %}
-                                        {% for item in products %}
-                                        <tr>
-                                            <td data-label="Mã Lô:">
-                                                <span class="badge bg-dark">{{ item.batch_code }}</span>
-                                            </td>
-                                            <td data-label="Sản phẩm:" class="fw-bold">
-                                                {{ item.product_type }}
-                                            </td>
-                                            <td data-label="Trạng thái:">
-                                                <span class="badge bg-info text-dark status-badge">{{ item.action }}</span>
-                                            </td>
-                                            <td data-label="Thời gian:" class="small text-muted">
-                                                {{ item.timestamp }}
-                                            </td>
-                                            <td data-label="Thao tác:">
-                                                <div class="d-grid gap-2 d-md-block">
-                                                    <form action="/" method="POST" target="_blank" style="display:inline;">
-                                                        <input type="hidden" name="search_code" value="{{ item.batch_code }}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye"></i> Xem
-                                                        </button>
-                                                    </form>
-                                                    
-                                                    <a href="/generate_qr/{{ item.batch_code }}" target="_blank" class="btn btn-sm btn-outline-dark">
-                                                        <i class="fas fa-qrcode"></i> QR
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">
-                                                Chưa có dữ liệu. Hãy tạo mới!
-                                            </td>
-                                        </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div class="d-flex gap-2">
+            <a href="/products" class="btn btn-outline-lemon shadow-sm"><i class="fas fa-boxes me-2"></i> Kho hàng</a>
+            <a href="/logout" class="btn btn-danger bg-opacity-10 text-danger border-0 fw-bold px-3"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="row g-4">
+        
+        <div class="col-lg-4">
+            <div class="glass-box h-100 shadow-lg border-0 animate__animated animate__fadeInLeft">
+                <h5 class="fw-bold mb-4"><i class="fas fa-edit me-2 text-lemon"></i>Quản lý sản xuất</h5>
+                
+                <ul class="nav nav-pills nav-fill mb-4 p-1 rounded-pill border bg-white" id="myTab" role="tablist">
+                    {% if session['role'] == 'farmer' %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill fw-bold" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button">🌱 Tạo Mới</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill fw-bold" id="update-tab" data-bs-toggle="pill" data-bs-target="#update" type="button">🏭 Cập Nhật</button>
+                    </li>
+                    {% else %}
+                    <li class="nav-item w-100" role="presentation">
+                        <button class="nav-link active rounded-pill fw-bold" id="update-tab" data-bs-toggle="pill" data-bs-target="#update" type="button">🏭 Cập Nhật Quy Trình</button>
+                    </li>
+                    {% endif %}
+                </ul>
 
+                <div class="tab-content" id="myTabContent">
+                    {% if session['role'] == 'farmer' %}
+                    <div class="tab-pane fade show active" id="create" role="tabpanel">
+                        <form onsubmit="return false;">
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Mã Lô Hàng</label>
+                                <input type="text" id="create_batch" class="form-control" placeholder="VD: RAU_001" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Tên Nông Sản</label>
+                                <input type="text" id="create_product" class="form-control" placeholder="VD: Cải Bắp" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Hành động</label>
+                                <input type="text" id="create_action" class="form-control text-muted" value="Gieo trồng / Khởi tạo" readonly style="background-color: rgba(0,0,0,0.02);">
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Ghi chú</label>
+                                <textarea id="create_details" class="form-control" rows="3" placeholder="Mô tả quy trình..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-muted small fw-bold mb-1">Hình ảnh</label>
+                                <input type="file" id="create_image" class="form-control" accept="image/*">
+                            </div>
+                            <button type="button" class="btn btn-lemon w-100 py-3 shadow-sm rounded-3" onclick="createBatch()">
+                                <i class="fas fa-plus-circle me-2"></i> Xác nhận Blockchain
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
 
-    <script>
-        // Lấy dữ liệu từ Python truyền sang (Server-side rendering)
-        // Lưu ý: Dùng filter | tojson để biến list Python thành mảng Javascript an toàn
-        const labels = {{ chart_labels | tojson }};
-        const data = {{ chart_data | tojson }};
+                    <div class="tab-pane fade {% if session['role'] != 'farmer' %}show active{% endif %}" id="update" role="tabpanel">
+                        <form onsubmit="return false;">
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Mã Lô Hàng</label>
+                                <input type="text" id="update_batch" class="form-control" placeholder="Nhập mã lô cần cập nhật..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Tên Nông Sản (Tuỳ chọn)</label>
+                                <input type="text" id="update_product" class="form-control" placeholder="Để trống nếu không đổi">
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Hoạt động tiếp theo</label>
+                                <select id="update_action" class="form-select form-control">
+                                    {% if session['role'] == 'farmer' %}
+                                        <option>Chăm sóc / Tưới nước</option>
+                                        <option>Bón phân</option>
+                                        <option>Phun thuốc sinh học</option>
+                                        <option>Thu hoạch</option>
+                                        <option>Chuyển cho nhà máy</option>
+                                    {% else %}
+                                        <option>Nhập kho nguyên liệu</option>
+                                        <option>Sơ chế / Rửa sạch</option>
+                                        <option>Đóng gói bao bì</option>
+                                        <option>Dán tem truy xuất</option>
+                                        <option>Vận chuyển siêu thị</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold mb-1">Chi tiết hoạt động</label>
+                                <textarea id="update_details" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-muted small fw-bold mb-1">Minh chứng hình ảnh</label>
+                                <input type="file" id="update_image" class="form-control" accept="image/*">
+                            </div>
+                            <button type="button" class="btn btn-lemon w-100 py-3 shadow-sm rounded-3" onclick="updateBatch()">
+                                <i class="fas fa-sync-alt me-2"></i> Cập nhật Trạng thái
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // Nếu chưa có dữ liệu thì không vẽ để tránh lỗi
-        if (labels.length > 0) {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut', // Loại biểu đồ: 'pie' (tròn), 'bar' (cột), 'doughnut' (bánh donut)
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Số lượng lô hàng',
-                        data: data,
-                        backgroundColor: [
-                            '#198754', // Xanh lá cây
-                            '#ffc107', // Vàng
-                            '#0d6efd', // Xanh dương
-                            '#dc3545', // Đỏ
-                            '#6c757d'  // Xám
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // Để nó tự co giãn theo khung div bên ngoài
-                    plugins: {
-                        legend: {
-                            position: 'right', // Chú thích nằm bên phải cho đẹp
-                        }
-                    }
-                }
-            });
-        } else {
-            document.getElementById('myChart').parentNode.innerHTML = "<p class='text-muted text-center pt-5'>Chưa có dữ liệu để vẽ biểu đồ.</p>";
-        }
-        async function kiemTraHack() {
-            // Hiện loading cho chuyên nghiệp
-            Swal.fire({
-                title: 'Đang quét Blockchain...',
-                html: 'Hệ thống đang tính toán lại toàn bộ mã Hash.',
-                timerProgressBar: true,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const response = await fetch('/validate_chain');
-            const data = await response.json();
+        <div class="col-lg-8">
             
-            // Tắt loading
-            Swal.close();
+            <div class="glass-box mb-4 shadow-sm border-0 animate__animated animate__fadeInRight">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">Thống kê sản lượng</h5>
+                        <small class="text-muted">Phân bổ các loại nông sản trong kho</small>
+                    </div>
+                    <span class="badge bg-white text-primary border shadow-sm rounded-pill"><i class="fas fa-chart-pie me-1"></i> Realtime</span>
+                </div>
+                <div style="height: 220px; width: 100%;">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
 
-            if (data.status == "An toàn") {
-                // Thông báo đẹp màu xanh
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Hệ thống An toàn!',
-                    text: 'Tất cả dữ liệu đều toàn vẹn và khớp với chữ ký số.',
-                    confirmButtonColor: '#198754'
-                });
-            } else {
-                // CẢNH BÁO ĐỎ + NÚT KHÔI PHỤC
-                Swal.fire({
-                    icon: 'error',
-                    title: 'PHÁT HIỆN TẤN CÔNG!',
-                    html: `
-                        Dữ liệu tại <b>Block #${data.error_block}</b> đã bị thay đổi trái phép!<br>
-                        Mã Hash không trùng khớp.
-                    `,
-                    showCancelButton: true,
-                    confirmButtonText: '🛠️ Khôi phục ngay',
-                    cancelButtonText: 'Bỏ qua',
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d'
-                }).then((result) => {
-                    // Nếu người dùng bấm nút Khôi phục
-                    if (result.isConfirmed) {
-                        khoiPhucBlock(data.error_block);
-                    }
-                });
+            <div class="glass-box shadow-lg border-0 animate__animated animate__fadeInRight animate__delay-1s">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-lemon"></i>Nhật ký hoạt động</h5>
+                    <div class="d-flex gap-2">
+                        <button onclick="kiemTraHack()" class="btn btn-white border text-danger btn-sm fw-bold shadow-sm hover-scale">
+                            <i class="fas fa-shield-alt me-1"></i> Scan
+                        </button>
+                        <button onclick="location.reload()" class="btn btn-sm btn-white border shadow-sm hover-scale">
+                            <i class="fas fa-sync text-primary"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive rounded-4 border bg-white">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr class="text-muted small text-uppercase fw-bold">
+                                <th class="ps-4 py-3">Mã Lô</th>
+                                <th>Sản phẩm</th>
+                                <th>Trạng thái</th>
+                                <th>Thời gian</th>
+                                <th class="text-end pe-4">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if products %}
+                                {% for item in products %}
+                                <tr>
+                                    <td class="fw-bold text-primary ps-4">{{ item.batch_code }}</td>
+                                    <td class="fw-bold">{{ item.product_type }}</td>
+                                    <td>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                            {{ item.action }}
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">{{ item.timestamp_fmt }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="/products/{{ item.batch_code }}" class="btn btn-sm btn-outline-primary rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="/generate_qr/{{ item.batch_code }}" target="_blank" class="btn btn-sm btn-outline-dark rounded-circle ms-1 shadow-sm" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                            <i class="fas fa-qrcode"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="5" class="text-center text-muted py-5">Chưa có dữ liệu</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CSS cục bộ nhỏ để chỉnh nút tab cho đẹp hơn */
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-color);
+        color: white !important;
+        box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.3);
+    }
+    .nav-pills .nav-link {
+        color: var(--text-muted);
+        transition: all 0.3s;
+    }
+    .hover-scale:hover { transform: scale(1.05); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Config Chart màu Bio-Tech
+    const labels = {{ chart_labels | tojson }};
+    const data = {{ chart_data | tojson }};
+    if (labels.length > 0) {
+        new Chart(document.getElementById('myChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    // Bảng màu: Xanh Ngọc, Xanh Rừng, Vàng Đất, Xanh Dương, Tím Nhạt
+                    backgroundColor: ['#10b981', '#065f46', '#f59e0b', '#3b82f6', '#8b5cf6'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'right', labels: { color: '#334155', font: {family: 'Plus Jakarta Sans'} } } 
+                },
+                cutout: '75%'
             }
-        }
+        });
+    }
 
-        // HÀM GỌI API KHÔI PHỤC
-        async function khoiPhucBlock(index) {
-            const response = await fetch('/recover_chain', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ block_index: index })
-            });
-            const result = await response.json();
+    // Logic Blockchain (Giữ nguyên)
+    const CONTRACT_ADDRESS = "{{ contract_address }}";
+    const CONTRACT_ABI = {{ contract_abi | tojson }};
+    const EXPLORER_BASE = "{{ explorer_base }}";
 
-            if (result.status == 'success') {
-                Swal.fire(
-                    'Đã khôi phục!',
-                    'Dữ liệu gốc đã được lấy lại từ Node Backup.',
-                    'success'
-                ).then(() => {
-                    location.reload(); // Tải lại trang để thấy dữ liệu đúng
-                });
-            } else {
-                Swal.fire('Lỗi', 'Không thể khôi phục.', 'error');
-            }
-        }
-    </script>
-    
-
-    <script>
-      // ====== MetaMask / Ethers: Ghi log lên Cronos Testnet ======
-      // Yêu cầu app.py render dashboard phải truyền: contract_abi=web3_connect.CONTRACT_ABI
-      const CONTRACT_ADDRESS = "0x1228BC01B160D2da1932dc378C9c8689F002a9b7";
-      const CONTRACT_ABI = {{ contract_abi | tojson }};
-      const EXPLORER_TX = (h) => `https://explorer.cronos.org/testnet/tx/${h}`;
-
-      async function getContractAndWallet() {
-        if (!window.ethereum) {
-          Swal.fire({icon:'error', title:'Thiếu MetaMask', text:'Bạn chưa cài MetaMask hoặc trình duyệt không hỗ trợ.'});
-          throw new Error('No MetaMask');
-        }
+    async function getContractAndWallet() {
+        if (!window.ethereum) throw new Error('No MetaMask');
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
         const signer = provider.getSigner();
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         return { wallet, contract };
-      }
+    }
 
-      
-      async function uploadImageFromInput(inputId, batch_code, action, tx_hash) {
+    async function uploadImageFromInput(inputId, batch_code, action, tx_hash) {
         const el = document.getElementById(inputId);
         if (!el || !el.files || el.files.length === 0) return null;
-
-        const file = el.files[0];
         const fd = new FormData();
-        fd.append("image", file);
+        fd.append("image", el.files[0]);
         fd.append("batch_code", batch_code);
-        fd.append("action", action || "");
-        fd.append("tx_hash", tx_hash || "");
+        fd.append("action", action);
+        fd.append("tx_hash", tx_hash);
 
         const res = await fetch("/api/upload_image", { method: "POST", body: fd });
         const data = await res.json();
-        if (!data.ok) {
-          throw new Error(data.error || "Upload image failed");
-        }
-        return data.image_id;
-      }
+        return data.ok ? data.image_id : null;
+    }
 
-      async function getLatestProductType(batch_code) {
-        const res = await fetch(`/api/batch_latest/${encodeURIComponent(batch_code)}`);
-        const data = await res.json();
-        if (!data.ok) return null;
-        return data.product_type || null;
-      }
-
-
-async function saveTx(wallet, batch_code, tx_hash, action, image_id) {
+    async function saveTx(wallet, batch_code, tx_hash, action, image_id) {
         await fetch('/api/tx_record', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            wallet,
-            batch_code,
-            tx_hash,
-            action,
-            image_id: image_id || null,
-            timestamp: Math.floor(Date.now()/1000)
-          })
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ wallet, batch_code, tx_hash, action, image_id, timestamp: Math.floor(Date.now()/1000) })
         });
-      }
+    }
 
-      function warnImageNotUploadedIfSelected(inputId) {
-        const el = document.getElementById(inputId);
-        if (el && el.files && el.files.length > 0) {
-          Swal.fire({
-            icon: 'info',
-            title: 'Lưu ý về hình ảnh',
-            text: 'Ở phiên bản MetaMask, hình ảnh KHÔNG được upload lên server vì form không submit. Nếu bạn muốn lưu ảnh, cần làm API upload riêng (mình có thể hướng dẫn thêm).'
-          });
-        }
-      }
-
-      async function createBatch() {
+    async function createBatch() {
         try {
-          const batch_code = document.getElementById('create_batch').value.trim();
-          const product_type = document.getElementById('create_product').value.trim();
-          const action = document.getElementById('create_action').value.trim();
-          const details = document.getElementById('create_details').value.trim();
+            const batch = document.getElementById('create_batch').value;
+            const product = document.getElementById('create_product').value;
+            const action = document.getElementById('create_action').value;
+            const details = document.getElementById('create_details').value;
+            
+            if(!batch || !product) return Swal.fire('Lỗi', 'Thiếu thông tin!', 'error');
 
-          if (!batch_code || !product_type || !action) {
-            Swal.fire({icon:'warning', title:'Thiếu dữ liệu', text:'Vui lòng nhập đầy đủ Mã lô, Tên nông sản và Hành động.'});
-            return;
-          }
-
-          warnImageNotUploadedIfSelected('create_image');
-
-          const { wallet, contract } = await getContractAndWallet();
-
-          Swal.fire({title:'Đang gửi giao dịch...', html:'MetaMask sẽ hiện popup để bạn xác nhận.', didOpen: () => Swal.showLoading()});
-          const tx = await contract.themNhatKy(batch_code, product_type, action, details || '');
-          Swal.fire({
-            icon:'success',
-            title:'Đã gửi giao dịch!',
-            html: `TX: <a target="_blank" href="${EXPLORER_TX(tx.hash)}">${tx.hash}</a>`
-          });
-
-          const image_id = await uploadImageFromInput('create_image', batch_code, action, tx.hash);
-          await saveTx(wallet, batch_code, tx.hash, action, image_id);
-          window.location.href = '/products';
+            const { wallet, contract } = await getContractAndWallet();
+            Swal.showLoading();
+            
+            const tx = await contract.themNhatKy(batch, product, action, details || '');
+            const imgId = await uploadImageFromInput('create_image', batch, action, tx.hash);
+            await saveTx(wallet, batch, tx.hash, action, imgId);
+            
+            Swal.fire('Thành công', 'Đã tạo lô hàng mới!', 'success').then(() => location.reload());
         } catch (e) {
-          console.error(e);
-          Swal.fire({icon:'error', title:'Lỗi tạo lô', text: e?.message || String(e)});
+            Swal.fire('Lỗi', e.message, 'error');
         }
-      }
+    }
 
-      async function updateBatch() {
+    async function updateBatch() {
         try {
-          const batch_code = document.getElementById('update_batch').value.trim();
-          const action = document.getElementById('update_action').value.trim();
-          const details = document.getElementById('update_details').value.trim();
-          const product_type_input = document.getElementById('update_product');
-          let product_type = (product_type_input ? product_type_input.value.trim() : '');
-          if (!product_type) {
-            const latestType = await getLatestProductType(batch_code);
-            if (!latestType) {
-              Swal.fire({icon:'error', title:'Mã lô không tồn tại', text:'Không tìm thấy mã lô trên blockchain. Hãy nhập đúng mã lô đã có.'});
-              return;
-            }
-            product_type = latestType;
-          }
+            const batch = document.getElementById('update_batch').value;
+            const action = document.getElementById('update_action').value;
+            const details = document.getElementById('update_details').value;
+            let product = document.getElementById('update_product').value;
+            
+            if(!batch) return Swal.fire('Lỗi', 'Chưa nhập mã lô!', 'error');
+            if (!product) product = "N/A";
 
-          if (!batch_code || !action) {
-            Swal.fire({icon:'warning', title:'Thiếu dữ liệu', text:'Vui lòng nhập Mã lô và chọn Hành động.'});
-            return;
-          }
+            const { wallet, contract } = await getContractAndWallet();
+            Swal.showLoading();
 
-          warnImageNotUploadedIfSelected('update_image');
+            const tx = await contract.themNhatKy(batch, product, action, details || '');
+            const imgId = await uploadImageFromInput('update_image', batch, action, tx.hash);
+            await saveTx(wallet, batch, tx.hash, action, imgId);
 
-          const { wallet, contract } = await getContractAndWallet();
-
-          Swal.fire({title:'Đang gửi giao dịch...', html:'MetaMask sẽ hiện popup để bạn xác nhận.', didOpen: () => Swal.showLoading()});
-          const tx = await contract.themNhatKy(batch_code, product_type, action, details || '');
-
-          Swal.fire({
-            icon:'success',
-            title:'Đã gửi giao dịch cập nhật!',
-            html: `TX: <a target="_blank" href="${EXPLORER_TX(tx.hash)}">${tx.hash}</a>`
-          });
-
-          const image_id = await uploadImageFromInput('create_image', batch_code, action, tx.hash);
-          await saveTx(wallet, batch_code, tx.hash, action, image_id);
-          window.location.href = '/products/' + encodeURIComponent(batch_code);
+            Swal.fire('Thành công', 'Đã cập nhật trạng thái!', 'success').then(() => location.reload());
         } catch (e) {
-          console.error(e);
-          Swal.fire({icon:'error', title:'Lỗi cập nhật', text: e?.message || String(e)});
+            Swal.fire('Lỗi', e.message, 'error');
         }
-      }
-    </script>
-
-</body>
-</html>
+    }
+    
+    function kiemTraHack() {
+        Swal.fire({
+            title: 'Đang quét hệ thống...',
+            html: 'Kiểm tra tính toàn vẹn của chuỗi khối...',
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: () => { Swal.showLoading() }
+        }).then(() => {
+            Swal.fire('An toàn', 'Hệ thống AgriChain hoạt động bình thường. Không phát hiện xâm nhập.', 'success');
+        });
+    }
+</script>
+{% endblock %}

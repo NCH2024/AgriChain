@@ -1,123 +1,94 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AgriChain - Chi tiết</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .thumbs{ display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; }
-    @media (max-width: 992px){ .thumbs{ grid-template-columns: repeat(4, 1fr);} }
-    @media (max-width: 576px){ .thumbs{ grid-template-columns: repeat(2, 1fr);} }
-    .thumb{
-      border:1px solid #eee;
-      border-radius:12px;
-      background:#fff;
-      overflow:hidden;
-      aspect-ratio: 1/1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .thumb img{ width:100%; height:100%; object-fit:cover; }
-    .tx-img{ width:54px; height:54px; border-radius:10px; object-fit:cover; border:1px solid #eee; }
-  </style>
-</head>
-<body class="bg-light">
-  <nav class="navbar navbar-dark bg-success px-4">
-    <a class="navbar-brand fw-bold" href="/products">← Danh sách</a>
-    <div class="text-white small d-flex align-items-center gap-2">
-      <span>Ví: <b>{{ wallet }}</b></span>
-      <a href="/logout" class="btn btn-sm btn-outline-light">Đăng xuất</a>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
-    <h4 class="mb-3">🔎 Truy xuất lô: <span class="text-success">{{ batch_code }}</span></h4>
-
-    {% if images and images|length > 0 %}
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <h6 class="mb-3">🖼️ Ảnh minh chứng (lưu trên MongoDB)</h6>
-        <div class="thumbs">
-          {% for im in images %}
-            <a class="thumb" href="/image/{{ im.id }}" target="_blank" title="{{ im.filename }}">
-              <img src="/image/{{ im.id }}" alt="{{ im.filename }}">
-            </a>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <h6 class="mb-3">⛓️ Lịch sử trên Blockchain</h6>
-
-        {% if history|length == 0 %}
-          <div class="text-muted">Không có dữ liệu blockchain cho mã lô này.</div>
-        {% else %}
-        <div class="table-responsive">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th>Thời gian</th>
-                <th>Hành động</th>
-                <th>Chi tiết</th>
-                <th>Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for h in history %}
-              <tr>
-                <td class="small">{{ h.timestamp_fmt }}</td>
-                <td><b>{{ h.action }}</b></td>
-                <td>{{ h.details }}</td>
-                <td class="small text-muted">{{ h.owner }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h6 class="mb-3">🧾 Giao dịch (Tx) của bạn</h6>
-
-        {% if txs|length == 0 %}
-          <div class="text-muted">Chưa lưu tx hash nào vào MongoDB.</div>
-        {% else %}
-          <div class="list-group">
-            {% for t in txs %}
-              <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
-                <div class="d-flex align-items-center gap-3">
-                  {% set img_id = images_by_tx.get(t.tx_hash) if images_by_tx else None %}
-                  {% if img_id %}
-                    <a href="/image/{{ img_id }}" target="_blank" title="Xem ảnh">
-                      <img class="tx-img" src="/image/{{ img_id }}" alt="img">
-                    </a>
-                  {% endif %}
-                  <div>
-                    <div class="small text-muted">
-                      {{ t.action }} | {{ t.timestamp }}
-                    </div>
-                    <div class="fw-bold small">{{ t.tx_hash }}</div>
-                  </div>
+{% extends "base.html" %}
+{% block title %}Chi tiết lô hàng{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="glass-box mb-4 position-relative overflow-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #065f46 0%, #10b981 100%);">
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-md-8 text-white">
+                <span class="badge bg-white bg-opacity-25 border border-white border-opacity-50 text-white mb-2">Private View</span>
+                <h2 class="fw-bold mb-2">{{ batch_code }}</h2>
+                <div class="d-flex gap-4 text-white text-opacity-75 small fw-bold">
+                    <span><i class="fas fa-user-circle me-1"></i> {{ wallet[:8] }}...</span>
+                    <span><i class="fas fa-network-wired me-1"></i> Cronos Testnet</span>
                 </div>
-                <a class="btn btn-outline-success btn-sm" target="_blank"
-                   href="{{ explorer_base }}/tx/{{ t.tx_hash }}">
-                  Mở Explorer
+            </div>
+            <div class="col-md-4 text-end mt-3 mt-md-0">
+                <a href="/trace/{{ batch_code }}" class="btn btn-white text-primary fw-bold shadow-lg">
+                    <i class="fas fa-share-alt me-2"></i> Giao diện Public
                 </a>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
+            </div>
+        </div>
+        <div class="position-absolute top-0 end-0 bg-white opacity-10 rounded-circle" style="width: 200px; height: 200px; margin-top: -50px; margin-right: -50px;"></div>
     </div>
 
-  </div>
-</body>
-</html>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-history me-2 text-lemon"></i>Hành trình sản phẩm</h5>
+            
+            {% if history|length == 0 %}
+                <div class="glass-box text-center py-5">Chưa có dữ liệu Blockchain.</div>
+            {% else %}
+                <div class="timeline-container ps-2">
+                    {% for h in history %}
+                    <div class="glass-box mb-3 p-3 position-relative border-0 shadow-sm hover-shadow-sm transition-all" style="border-left: 4px solid var(--accent-color) !important;">
+                        <div class="d-flex gap-3">
+                            <div style="width: 80px; height: 80px; flex-shrink: 0;">
+                                {% if h.image_id %}
+                                    <img src="/image/{{ h.image_id }}" class="w-100 h-100 rounded-3 object-fit-cover border shadow-sm cursor-pointer" onclick="window.open(this.src)">
+                                {% else %}
+                                    <div class="w-100 h-100 bg-light rounded-3 d-flex align-items-center justify-content-center border">
+                                        <i class="fas fa-image text-muted opacity-50"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="fw-bold text-dark mb-1">{{ h.action }}</h6>
+                                    <small class="text-muted fw-bold">{{ h.timestamp_fmt }}</small>
+                                </div>
+                                <p class="text-muted small mb-2">{{ h.details }}</p>
+                                
+                                <div class="small fst-italic">
+                                    {% if h.tx_hash %}
+                                        <a href="{{ explorer_base }}/tx/{{ h.tx_hash }}" target="_blank" class="text-decoration-none text-primary fw-bold bg-light px-2 py-1 rounded border">
+                                            <i class="fas fa-external-link-alt me-1"></i> Verify Tx
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted bg-light px-2 py-1 rounded border">Processing...</span>
+                                    {% endif %}
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-box text-center mb-4 shadow-sm">
+                <h6 class="fw-bold mb-3 text-dark">Tem Truy Xuất (QR)</h6>
+                <div class="bg-white p-3 d-inline-block rounded-4 shadow-sm mb-3 border">
+                    <img src="/generate_qr/{{ batch_code }}" class="img-fluid" style="max-width: 150px;">
+                </div>
+                <button onclick="window.print()" class="btn btn-outline-dark btn-sm w-100 rounded-pill"><i class="fas fa-print me-1"></i> In tem</button>
+            </div>
+            
+            <div class="glass-box shadow-sm">
+                <h6 class="fw-bold mb-3 text-dark">Lịch sử giao dịch (Local)</h6>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    {% for t in txs %}
+                    <div class="mb-3 border-bottom pb-2">
+                        <div class="d-flex justify-content-between small fw-bold text-primary">
+                            <span>{{ t.action }}</span>
+                            <span class="text-muted">{{ t.timestamp }}</span>
+                        </div>
+                        <div class="text-muted small text-truncate font-monospace bg-light p-1 rounded mt-1">{{ t.tx_hash }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

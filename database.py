@@ -36,62 +36,35 @@ class DatabaseManager:
                 return user
         return None
     
-    # Nâng cấp hàm lưu block (để lưu cả bản backup)
-
-    def luu_block(self, block_data):
-        # Lưu vào chuỗi chính (để hiển thị)
-        self.db.blockchain.insert_one(block_data.copy())
-        
-        # Lưu vào chuỗi dự phòng (để khôi phục sau này)
-        # Lưu ý: Cần xóa _id đi để MongoDB tự tạo _id mới cho bên backup, tránh trùng lặp
-        backup_data = block_data.copy()
-        if '_id' in backup_data:
-            del backup_data['_id']
-        self.db.blockchain_backup.insert_one(backup_data)
-        
-    # Nâng cấp hàm khôi phục một block từ bản backup    
-        
-    def khoi_phuc_mot_block(self, index_can_sua):
-        # Tìm block gốc trong kho dự phòng
-        block_chuan = self.db.blockchain_backup.find_one({"index": index_can_sua}, {"_id": 0})
-        
-        if block_chuan:
-            # Xóa block rác/bị hack ở chuỗi chính
-            self.db.blockchain.delete_one({"index": index_can_sua})
-            
-            # Chèn lại block chuẩn vào
-            self.db.blockchain.insert_one(block_chuan)
-            return True
-        return False
-
-    def lay_toan_bo_chuoi(self):
-        # Lấy dữ liệu, bỏ trường _id đi để đỡ lỗi
-        return list(self.db.blockchain.find({}, {"_id": 0}).sort("index", 1))
-
-    def lay_block_cuoi(self):
-        return self.db.blockchain.find_one({}, {"_id": 0}, sort=[("index", -1)])
     
-    
-    # CẢI TIẾN CHỨC NĂNG TÌM KIẾM VÀ LẤY DANH SÁCH V2   
+    def luu_anh(self, url, public_id, filename, upload_by):
+        """Lưu metadata của ảnh vào MongoDB"""
+        img_doc = {
+            "url": url,
+            "public_id": public_id,
+            "filename": filename,
+            "upload_by": upload_by,
+            "created_at": datetime.now()
+        }
+        # Insert vào collection 'images'
+        result = self.db.images.insert_one(img_doc)
+        return str(result.inserted_id) # Trả về ID dạng chuỗi
 
-    def tim_kiem_theo_ma(self, batch_code):
-        # Hàm này dùng cho Khách hàng tra cứu
-        # Lấy tất cả block có batch_code trùng khớp
-        return list(self.db.blockchain.find({"batch_code": batch_code}, {"_id": 0}).sort("index", 1))
-
-    def lay_danh_sach_cua_toi(self, username):
-        # Hàm này dùng cho Dashboard
-        # Lấy danh sách các lô hàng mà user này từng tác động
-        # Dùng distinct để lấy danh sách mã code duy nhất, không trùng lặp
-        ds_ma_code = self.db.blockchain.find({"owner": username}).distinct("batch_code")
+    def lay_anh(self, image_id):
+        """Lấy link ảnh dựa vào ID"""
+        from bson.objectid import ObjectId
+        try:
+            return self.db.images.find_one({"_id": ObjectId(image_id)})
+        except Exception:
+            return None
         
-        ket_qua = []
-        for code in ds_ma_code:
-            # Với mỗi mã code, lấy thông tin mới nhất để hiển thị trạng thái hiện tại
-            last_info = self.db.blockchain.find_one(
-                {"batch_code": code}, 
-                {"_id": 0}, 
-                sort=[("index", -1)]
-            )
-            ket_qua.append(last_info)
-        return ket_qua
+    def lay_anh_dai_dien(self, batch_code):
+        # Tìm trong lịch sử giao dịch (user_txs) xem có dòng nào chứa image_id không
+        # Sắp xếp lấy cái mới nhất (descending)
+        record = self.db.user_txs.find_one(
+            {"batch_code": batch_code, "image_id": {"$exists": True, "$ne": None}},
+            sort=[("timestamp", -1)]
+        )
+        if record:
+            return record.get("image_id")
+        return None

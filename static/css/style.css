@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* --- BẢNG MÀU BIO-TECH 2025 --- */
+    --bg-body: #f8fafc; 
+    --bg-gradient: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                   radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+
+    --primary-color: #065f46; 
+    --primary-hover: #047857;
+    --accent-color: #10b981;
+    --highlight-color: #f59e0b;
+
+    --text-main: #0f172a;    
+    --text-body: #334155;    
+    --text-muted: #64748b;   
+
+    /* Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.9);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    
+    --radius-box: 20px; /* Giảm bo góc chút cho gọn */
+    --radius-btn: 10px;
+}
+
+body {
+    background-color: var(--bg-body);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-body);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    line-height: 1.5; /* Giảm khoảng cách dòng chút cho gọn */
+    font-size: 0.925rem; /* Base size ~14.8px (Chuẩn Dashboard) */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- Typography (Giới hạn kích thước tiêu đề) --- */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-main);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+}
+
+h1 { font-size: 2rem; }       /* ~32px */
+h2 { font-size: 1.75rem; }    /* ~28px */
+h3 { font-size: 1.5rem; }     /* ~24px */
+h4 { font-size: 1.25rem; }    /* ~20px */
+h5 { font-size: 1.1rem; }     /* ~17.6px */
+h6 { font-size: 1rem; }       /* ~16px */
+
+.text-lemon {
+    color: var(--primary-color) !important;
+    font-weight: 700;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-shadow-light {
+  text-shadow: 1px 1px 20px rgb(255, 255, 255);
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+a:hover {
+    color: var(--accent-color);
+}
+
+/* --- Glass Box (Khối Kính) --- */
+.glass-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: var(--glass-border);
+    border-radius: var(--radius-box);
+    box-shadow: var(--glass-shadow);
+    padding: 24px; /* Giảm padding từ 32px xuống 24px */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+}
+
+.glass-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.05);
+    border-color: #fff;
+}
+
+/* --- Header --- */
+.navbar-glass {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding-top: 10px; /* Giảm padding header */
+    padding-bottom: 10px;
+}
+
+.navbar-brand { font-size: 1.25rem; }
+.nav-link { 
+    color: var(--text-body) !important; 
+    font-weight: 500; 
+    font-size: 0.95rem;
+}
+.nav-link:hover { color: var(--primary-color) !important; }
+
+/* --- Footer --- */
+.footer-glass {
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 60px;
+    padding: 40px 0;
+    font-size: 0.9rem;
+}
+
+/* --- Form & Input (Nhỏ gọn hơn) --- */
+.form-control {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: var(--text-main);
+    border-radius: var(--radius-btn);
+    padding: 10px 14px; /* Giảm padding input */
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    background-color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(6, 95, 70, 0.1);
+    color: var(--text-main);
+}
+.form-control::placeholder { color: #94a3b8; font-size: 0.9rem; }
+
+/* --- Buttons (Nút bấm gọn hơn) --- */
+.btn-lemon {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-btn);
+    padding: 10px 20px; /* Nút gọn hơn */
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-lemon:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.3);
+    color: #fff;
+}
+
+.btn-outline-lemon {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: var(--text-main);
+    border-radius: var(--radius-btn);
+    font-weight: 600;
+    padding: 8px 18px;
+    font-size: 0.9rem;
+}
+
+.btn-outline-lemon:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: #f0fdfa;
+}
+
+/* --- Table & Badges --- */
+.table { color: var(--text-body) !important; font-size: 0.9rem; }
+.table thead th {
+    background-color: transparent;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+.table td { border-bottom: 1px solid #f1f5f9; padding: 12px 8px; }
+
+/* Badge trạng thái nhỏ xinh */
+.badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+}
+.bg-dark {
+    background-color: #f1f5f9 !important;
+    color: var(--text-main) !important;
+    border: none !important;
+}
+.bg-black {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+.text-white { color: var(--text-main) !important; }
+
+/* --- Card Product Fix --- */
+.group-hover-effect .position-relative {
+    background-color: #f1f5f9;
+}

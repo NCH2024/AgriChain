@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Liên hệ{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="glass-box p-5 shadow-lg border-0 text-center">
+                <h2 class="fw-bold mb-3 text-dark">Liên hệ <span class="text-primary">AgriChain</span></h2>
+                <p class="text-muted mb-5">Gửi tin nhắn cho chúng tôi để được hỗ trợ 24/7</p>
+
+                <form class="text-start">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold mb-1">Họ tên</label>
+                            <input type="text" class="form-control bg-light" placeholder="Nguyễn Văn A">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold mb-1">Email</label>
+                            <input type="email" class="form-control bg-light" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-muted small fw-bold mb-1">Nội dung</label>
+                        <textarea class="form-control bg-light" rows="4" placeholder="Nhập nội dung..."></textarea>
+                    </div>
+                    <button type="button" class="btn btn-lemon w-100 py-3 shadow-sm rounded-pill fw-bold">Gửi Tin Nhắn 🚀</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

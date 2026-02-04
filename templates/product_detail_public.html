@@ -1,69 +1,75 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AgriChain - Chi tiết truy xuất</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <nav class="navbar navbar-light bg-white border-bottom px-4">
-    <a class="navbar-brand fw-bold text-success" href="/">← AgriChain</a>
-    <div class="ms-auto">
-      <a class="btn btn-outline-success" href="/login">Đăng nhập</a>
-    </div>
-  </nav>
-
-  <div class="container py-4">
-    <h4>🔎 Truy xuất lô: <span class="text-success">{{ batch_code }}</span></h4>
-
-    <div class="mt-2 d-flex flex-wrap gap-2">
-      {% if explorer_base and contract_address %}
-        <a class="btn btn-outline-primary btn-sm" target="_blank"
-           href="{{ explorer_base }}/address/{{ contract_address }}">
-          🔗 Xem Hợp đồng trên CronosScan
-        </a>
-      {% endif %}
+{% extends "base.html" %}
+{% block title %}Truy xuất nguồn gốc{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5 animate__animated animate__fadeInDown">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase fw-bold letter-spacing-1">
+            <i class="fas fa-check-circle me-1"></i> Verified by Blockchain
+        </span>
+        <h1 class="display-4 fw-bold text-dark mb-2">{{ batch_code }}</h1>
+        <p class="text-muted">Dữ liệu nguồn gốc được xác thực và lưu trữ vĩnh viễn.</p>
     </div>
 
-
-    <div class="card shadow-sm mt-3">
-      <div class="card-body">
-        <h6 class="mb-3">⛓️ Lịch sử trên Blockchain</h6>
-
-        {% if history|length == 0 %}
-          <div class="text-muted">Không có dữ liệu blockchain cho mã lô này.</div>
-        {% else %}
-        <div class="table-responsive">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th>Thời gian</th>
-                <th>Hành động</th>
-                <th>Chi tiết</th>
-                <th>Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for h in history %}
-              <tr>
-                <td class="small">{{ h.timestamp_fmt }}</td>
-                <td><b>{{ h.action }}</b></td>
-                <td>{{ h.details }}</td>
-                <td class="small text-muted">{{ h.owner }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <div class="position-relative ps-4 border-start border-2 border-primary border-opacity-25">
+                {% for h in history %}
+                <div class="mb-5 position-relative animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.2 }}s;">
+                    <div class="position-absolute top-0 start-0 translate-middle rounded-circle bg-white border border-4 border-primary shadow-sm" style="width: 20px; height: 20px; margin-left: -1px; margin-top: 15px;"></div>
+                    
+                    <div class="glass-box border-0 shadow-sm hover-shadow-lg transition-all ms-3">
+                        <div class="d-flex flex-wrap gap-4 align-items-start">
+                            <div class="flex-shrink-0" style="width: 120px;">
+                                {% if h.image_id %}
+                                    <img src="/image/{{ h.image_id }}" class="w-100 rounded-3 shadow-sm border object-fit-cover" style="aspect-ratio: 1/1;" onclick="window.open(this.src)">
+                                {% else %}
+                                    <div class="w-100 rounded-3 bg-light d-flex align-items-center justify-content-center border" style="aspect-ratio: 1/1;">
+                                        <i class="fas fa-camera fa-2x text-muted opacity-25"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h4 class="fw-bold text-primary mb-0">{{ h.action }}</h4>
+                                    <span class="badge bg-light text-dark border">{{ h.timestamp_fmt }}</span>
+                                </div>
+                                <p class="text-dark opacity-75 fst-italic mb-3">"{{ h.details }}"</p>
+                                <div class="d-flex align-items-center gap-2 pt-3 border-top border-light">
+                                    <div class="bg-light rounded-circle p-1"><i class="fas fa-user-circle text-muted"></i></div>
+                                    <span class="small fw-bold text-muted">{{ h.owner[:10] }}...</span>
+                                    
+                                    {% if h.tx_hash %}
+                                    <a href="{{ explorer_base }}/tx/{{ h.tx_hash }}" target="_blank" class="ms-auto btn btn-sm btn-outline-success rounded-pill px-3">
+                                        Verify <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="ms-auto badge bg-light text-muted border">
+                                        Processing...
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endif %}
 
-        <div class="mt-3 small text-muted">
-          Xem Contract trên Explorer:
-          <a target="_blank" href="{{ explorer_base }}/address/{{ contract_address }}">{{ contract_address }}</a>
+        <div class="col-lg-4">
+            <div class="glass-box text-center sticky-top shadow-lg border-success border-top-4" style="top: 100px;">
+                <div class="mb-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/7510/7510364.png" width="80" class="mb-3 animate__animated animate__pulse animate__infinite">
+                    <h5 class="fw-bold text-dark">Chứng nhận An Toàn</h5>
+                    <p class="small text-muted">Sản phẩm đạt chuẩn AgriChain Bio-Standard</p>
+                </div>
+                <hr class="opacity-10">
+                <div class="bg-white p-3 d-inline-block rounded-4 border shadow-sm mb-3">
+                    <img src="/generate_qr/{{ batch_code }}" class="img-fluid" width="160">
+                </div>
+                <p class="small text-muted mb-0">Quét mã để chia sẻ hành trình này.</p>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</body>
-</html>
+</div>
+{% endblock %}
