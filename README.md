@@ -1,6 +1,6 @@
 # 📖 Hệ thống Truy xuất nguồn gốc Nông sản Sạch - AgriChain
 
-**Đề tài:** SỔ NHẬT KÝ NÔNG SẢN SẠCH
+**Đề tài:** SỔ NHẬT KÝ NÔNG SẢN SẠCH (Ứng dụng Blockchain)
 
 ---
 
@@ -19,62 +19,75 @@ Người tiêu dùng hiện nay rất lo sợ về vấn đề thực phẩm b�
 
 ### 2. Giải pháp: AgriChain
 
-Xây dựng một ứng dụng web mô phỏng công nghệ **Blockchain** để lưu trữ nhật ký canh tác.
+Xây dựng một ứng dụng phi tập trung (DApp) sử dụng công nghệ **Blockchain (Cronos Testnet)** để lưu trữ nhật ký canh tác.
 
-*   **Ví dụ:** Mỗi khi người nông dân thực hiện một công việc (tưới nước, bón phân, thu hoạch), hành động đó sẽ được ghi lại, đóng gói thành một **"Khối" (Block)** và thêm vào chuỗi.
-*   **Điểm mấu chốt:** Một khi đã được ghi vào chuỗi, thông tin đó vĩnh viễn **không thể sửa đổi hay xóa bỏ**. Đây chính là tính chất **Bất biến (Immutability)** của công nghệ Blockchain, đảm bảo tính minh bạch và đáng tin cậy của dữ liệu.
+*   **Khác biệt:** Thay vì chỉ mô phỏng bằng cơ sở dữ liệu thông thường, hệ thống sử dụng **Smart Contract (Hợp đồng thông minh)** để ghi lại dữ liệu lên mạng lưới Blockchain thực tế.
+*   **Điểm mấu chốt:** Dữ liệu một khi đã được ghi vào Blockchain sẽ **không thể sửa đổi hay xóa bỏ (Immutability)**. Người tiêu dùng có thể kiểm tra mã giao dịch (Tx Hash) trực tiếp trên Blockchain Explorer để xác thực tính toàn vẹn.
 
 ## 🔄 QUY TRÌNH HOẠT ĐỘNG
 
-Vòng đời của một nông sản sẽ được ghi lại theo từng giai đoạn như sau:
+Vòng đời của một nông sản sẽ được ghi lại và truy xuất như sau:
 
-1.  **Giai đoạn 1: Gieo trồng (Genesis Block)**
-    *   Nông dân tạo ra bản ghi đầu tiên (khối nguyên thủy) của chuỗi.
-    *   *Ví dụ: "Gieo hạt giống Cải bẹ xanh, Lô đất A, Ngày 01/10/2023".*
+1.  **Đăng nhập & Xác thực:**
+    *   Nông dân đăng nhập vào hệ thống thông qua **Ví điện tử (Metamask/Web3 Wallet)**. Địa chỉ ví đóng vai trò là định danh duy nhất của người sản xuất.
 
-2.  **Giai đoạn 2: Chăm sóc (Tạo các Block mới)**
-    *   Mỗi hành động chăm sóc sẽ tạo ra một khối mới, được liên kết với khối trước đó.
-    *   *Ví dụ: Ngày 05/10, nông dân ghi "Tưới nước sạch" -> Tạo Block mới.*
-    *   *Ví dụ: Ngày 15/10, nông dân ghi "Bón phân hữu cơ" -> Tạo Block mới.*
+2.  **Ghi nhật ký canh tác (Giao dịch Blockchain):**
+    *   Mỗi khi thực hiện một công việc (Gieo trồng, Bón phân, Thu hoạch), nông dân nhập thông tin và tải ảnh minh chứng.
+    *   **Ảnh:** Được upload lên **Cloudinary** để tối ưu lưu trữ.
+    *   **Dữ liệu:** Thông tin lô hàng, hành động, và thời gian được gửi lên **Smart Contract** trên mạng **Cronos Testnet**.
+    *   Hệ thống lưu trữ Hash giao dịch và liên kết ảnh vào MongoDB để phục vụ hiển thị nhanh.
 
-3.  **Giai đoạn 3: Thu hoạch & Phân phối**
-    *   Hành động thu hoạch và bàn giao cho đơn vị vận chuyển cũng được ghi lại.
-    *   *Ví dụ: Ngày 30/10/2023, nông dân ghi "Đã thu hoạch, chuyển cho xe tải" -> Tạo Block mới.*
+3.  **Tạo mã QR định danh:**
+    *   Mỗi lô hàng (`batch_code`) sẽ được hệ thống tạo một mã QR duy nhất.
+    *   Mã QR này chứa đường dẫn đến trang truy xuất nguồn gốc công khai (`/trace/<batch_code>`).
 
-4.  **Giai đoạn 4: Người tiêu dùng kiểm tra**
-    *   Tại siêu thị, khách hàng quét mã QR hoặc nhập mã lô hàng trên ứng dụng web.
-    *   Hệ thống sẽ hiển thị toàn bộ lịch sử của sản phẩm từ Giai đoạn 1 đến 3, giúp khách hàng có đầy đủ thông tin để đánh giá sản phẩm có "sạch" hay không.
+4.  **Người tiêu dùng kiểm tra:**
+    *   Khách hàng quét mã QR trên sản phẩm.
+    *   Hệ thống tự động truy vấn dữ liệu trực tiếp từ **Blockchain** (để lấy thông tin xác thực) và kết hợp với hình ảnh từ cơ sở dữ liệu để hiển thị toàn bộ lịch sử canh tác.
 
 ## 🛠️ KIẾN TRÚC HỆ THỐNG & CÔNG NGHỆ (TECH STACK)
 
-Hệ thống được xây dựng dựa trên kiến trúc 3 tầng đơn giản:
+Hệ thống được xây dựng dựa trên kiến trúc hiện đại kết hợp giữa Web2 và Web3:
 
-*   **Tầng Dữ liệu (Blockchain Core - `Python`)**:
-    *   Sử dụng một `List` trong Python để mô phỏng chuỗi các `Block`.
-    *   Mỗi `Block` là một đối tượng chứa các thông tin: `Index`, `Timestamp`, `Data` (dữ liệu giao dịch), `Hash` (mã băm của khối hiện tại), và `Previous Hash` (mã băm của khối trước đó).
-    *   Các khối được móc xích với nhau thông qua `Previous Hash`, đảm bảo tính toàn vẹn của chuỗi.
+*   **Tầng Blockchain (Web3 Layer)**:
+    *   **Mạng lưới:** Cronos Testnet (EVM Compatible).
+    *   **Smart Contract:** Viết bằng ngôn ngữ **Solidity**. Chịu trách nhiệm lưu trữ các bản ghi nhật ký bất biến.
+    *   **Giao tiếp:** Sử dụng thư viện `Web3.py` để kết nối Backend với Blockchain Node (RPC).
 
-*   **Tầng Giao tiếp (Backend API - `Flask`)**:
-    *   Sử dụng thư viện Flask của Python để xây dựng các API endpoint.
-    *   API đóng vai trò là "cổng giao tiếp", nhận yêu cầu từ giao diện người dùng (Frontend) và tương tác với lõi Blockchain (thêm khối mới, truy vấn chuỗi).
+*   **Tầng Backend (Application Layer - `Flask`)**:
+    *   Xây dựng bằng **Python Flask**.
+    *   Xử lý logic nghiệp vụ, xác thực ví, upload ảnh lên Cloudinary.
+    *   Đóng vai trò cầu nối (Middleware) giữa người dùng và Blockchain.
 
-*   **Tầng Hiển thị (Frontend - `HTML/CSS`)**:
-    *   Giao diện web đơn giản được xây dựng bằng HTML và CSS.
-    *   **Trang cho Nông dân:** Cung cấp form nhập liệu để ghi lại các hoạt động canh tác.
-    *   **Trang cho Khách hàng:** Cung cấp ô tìm kiếm để tra cứu lịch sử nông sản theo mã.
+*   **Tầng Dữ liệu (Database Layer)**:
+    *   **MongoDB:** Lưu trữ thông tin người dùng, metadata của ảnh, và cache lịch sử giao dịch (Transaction Hash) để tăng tốc độ truy vấn.
+    *   **Cloudinary:** Lưu trữ hình ảnh minh chứng hoạt động canh tác chất lượng cao.
 
-## 🧱 CẤU TRÚC DỮ LIỆU CỦA MỘT BLOCK
+*   **Tầng Hiển thị (Frontend)**:
+    *   HTML5, CSS3 (Glassmorphism UI), JavaScript.
+    *   Tích hợp hiển thị dữ liệu minh bạch từ Blockchain.
 
-Mỗi khối trong chuỗi sẽ có cấu trúc dữ liệu dạng JSON như sau:
+## 🧱 CẤU TRÚC DỮ LIỆU TRÊN SMART CONTRACT
 
-```json
-{
-    "index": 1,
-    "timestamp": 1672531200,
-    "data": "Gieo hạt giống Cải bẹ xanh, Lô đất A",
-    "previous_hash": "0",
-    "hash": "a1b2c3d4e5f6..."
+Dữ liệu trên Blockchain không lưu dưới dạng JSON thông thường mà được định nghĩa bằng `Struct` trong Solidity để tối ưu hóa chi phí (Gas fee) và đảm bảo tính chặt chẽ:
+
+```solidity
+struct LoHang {
+    string batch_code;    // Mã lô hàng (Ví dụ: RAU-001)
+    string product_type;  // Loại sản phẩm (Ví dụ: Cải bẹ xanh)
+    string action;        // Hành động (Ví dụ: Bón phân)
+    string details;       // Chi tiết ghi chú
+    uint256 timestamp;    // Thời gian ghi nhận (Lấy từ thời gian thực của Block)
+    address owner;        // Địa chỉ ví của người thực hiện (Định danh người nông dân)
 }
 ```
 
-Trong đó, `previous_hash` chính là "sợi dây xích" kết nối khối này với khối trước đó. Nếu ai đó cố tình sửa đổi dữ liệu của một khối trong quá khứ, mã băm sẽ thay đổi, làm cho "sợi dây xích" này bị "đứt" và chuỗi sẽ không còn hợp lệ.
+## 🚀 TÍNH NĂNG CHÍNH
+
+1.  **Quản lý nhật ký (Dashboard):** Xem thống kê các hoạt động, biểu đồ tỷ lệ loại sản phẩm.
+2.  **Truy xuất nguồn gốc (Traceability):** Giao diện Timeline hiển thị lịch sử từ mới đến cũ, kết hợp dữ liệu từ Blockchain và hình ảnh thực tế.
+3.  **Minh bạch thông tin:** Hiển thị rõ ràng Transaction Hash (Mã giao dịch) và liên kết đến Blockchain Explorer để người dùng tự kiểm chứng.
+4.  **Upload ảnh:** Tích hợp API Cloudinary để lưu trữ ảnh chất lượng cao.
+
+---
+*Dự án được phát triển cho môn học Công nghệ Chuỗi khối (Blockchain Technology).*
