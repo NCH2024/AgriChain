@@ -1,162 +1,209 @@
 from flask import Flask, render_template, request, redirect, session, url_for, send_file
 from database import DatabaseManager
-# from blockchain import Blockchain  <-- KHÔNG CẦN DÙNG CÁI CŨ NỮA
-import web3_connect  # <-- DÙNG CÁI MỚI NÀY
+from wallet_auth import register_wallet_routes, require_wallet
+from config import CRONOS_TESTNET_EXPLORER
+import web3_connect
 import datetime
 import qrcode
 import io
-import os
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "khoa_bi_mat" 
+app.secret_key = "khoa_bi_mat"
 
-# Vẫn dùng DatabaseManager để xử lý Đăng nhập/Đăng ký
 db = DatabaseManager()
-
-# Cấu hình nơi lưu ảnh
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# --- CÁC HÀM TIỆN ÍCH ---
+register_wallet_routes(app, db)
 
 @app.template_filter('ctime')
 def timectime(s):
-    if s is None: return ""
-    return datetime.datetime.fromtimestamp(int(s)).strftime('%d/%m/%Y %H:%M')
+    try:
+        if s is None:
+            return ""
+        return datetime.datetime.fromtimestamp(int(s)).strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return ""
 
 @app.route('/generate_qr/<batch_code>')
 def generate_qr(batch_code):
-    # Link trỏ về server của em (đang chạy local hoặc ngrok)
-    link = f"http://127.0.0.1:5000/?search_code={batch_code}"
+    link = f"{request.host_url}trace/{batch_code}"
     img = qrcode.make(link)
     buf = io.BytesIO()
     img.save(buf)
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
 
-# --- CÁC ROUTE CHÍNH ---
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # TRANG CHỦ: TRA CỨU
+    # Tra cứu theo mã lô (giữ UI tìm kiếm như cũ)
     ket_qua_tra_cuu = None
-    if request.method == 'POST' and 'search_code' in request.form:
-        code = request.form.get('search_code')
-        # [QUAN TRỌNG] Tìm kiếm trên Blockchain thật
-        ket_qua_tra_cuu = web3_connect.tim_kiem_blockchain(code)
-    
-    return render_template('index.html', ket_qua=ket_qua_tra_cuu)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # ĐĂNG NHẬP / ĐĂNG KÝ (Vẫn dùng MongoDB)
-    thong_bao = ""
     if request.method == 'POST':
-        action = request.form.get('action')
-        user = request.form.get('username')
-        pwd = request.form.get('password')
-        role = request.form.get('role')
+        code = (request.form.get('search_code') or '').strip()
+        if code:
+            ket_qua_tra_cuu = web3_connect.tim_kiem_blockchain(code)
 
-        if action == "register":
-            # Gọi MongoDB để tạo user
-            if db.tao_tai_khoan(user, pwd, role):
-                thong_bao = "Đăng ký thành công! Hãy đăng nhập."
-            else:
-                thong_bao = "Tài khoản đã tồn tại!"
-        
-        elif action == "login":
-            # Gọi MongoDB để check user
-            user_info = db.kiem_tra_dang_nhap(user, pwd)
-            if user_info:
-                session['user'] = user
-                session['role'] = user_info['role']
-                return redirect(url_for('dashboard'))
-            else:
-                thong_bao = "Sai tài khoản hoặc mật khẩu!"
+    # Danh sách tất cả lô hàng (mỗi batch_code lấy bản mới nhất)
+    all_chain = web3_connect.lay_danh_sach_blockchain() or []
+    latest_map = {}
+    for item in all_chain:
+        code = item.get("batch_code")
+        if not code:
+            continue
+        if code not in latest_map:
+            try:
+                ts = int(item.get("timestamp", 0) or 0)
+                item["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                item["timestamp_fmt"] = ""
+            latest_map[code] = item
+    products = list(latest_map.values())
 
-    return render_template('login.html', thong_bao=thong_bao)
+    return render_template('index.html', ket_qua=ket_qua_tra_cuu, products=products)
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
+@require_wallet
 def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    
-    user = session['user']
-    role = session.get('role')
-    
-    if request.method == 'POST':
-        mode = request.form.get('mode')
-        
-        # Phân quyền: Nhà máy không được tạo mới
-        if mode == 'create' and role != 'farmer':
-            return "<h1>LỖI: Nhà máy không được phép tạo mới!</h1>", 403
+    wallet = session.get("wallet")
+    role = session.get("role")
 
-        batch_code = request.form.get('batch_code')
-        action = request.form.get('action')
-        
-        # Xử lý ảnh
-        details = request.form.get('details', '') 
-        if 'image_file' in request.files:
-            file = request.files['image_file']
-            if file.filename != '':
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                details = details + f" [Ảnh: {filename}]"
-        
-        product_type = request.form.get('product_type') if mode == 'create' else "..."
+    all_chain = web3_connect.lay_danh_sach_blockchain() or []
+    my_products = [p for p in all_chain if str(p.get("owner","")).lower() == str(wallet).lower()]
 
-        # [QUAN TRỌNG] Ghi dữ liệu lên Blockchain thật (Cronos)
-        web3_connect.ghi_block_moi(batch_code, product_type, action, details)
-        
-        return redirect(url_for('dashboard'))
+    for p in my_products:
+        try:
+            ts = int(p.get("timestamp", 0) or 0)
+            p["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+        except Exception:
+            p["timestamp_fmt"] = ""
 
-    # [QUAN TRỌNG] Lấy danh sách từ Blockchain thật về để hiển thị
-    my_products = web3_connect.lay_danh_sach_blockchain()
-    
-    # Xử lý thống kê cho biểu đồ
     thong_ke = {}
     for p in my_products:
         loai = p.get('product_type', 'Chưa xác định')
-        if loai in thong_ke: thong_ke[loai] += 1
-        else: thong_ke[loai] = 1
-            
+        thong_ke[loai] = thong_ke.get(loai, 0) + 1
     labels = list(thong_ke.keys())
     data = list(thong_ke.values())
 
-    # Format thời gian
-    for p in my_products:
-        dt_object = datetime.datetime.fromtimestamp(p['timestamp'])
-        p['timestamp'] = dt_object.strftime("%d/%m/%Y %H:%M")
+    return render_template(
+        'dashboard.html',
+        wallet=wallet,
+        role=role,
+        session=session,
+        products=my_products,
+        chart_labels=labels,
+        chart_data=data,
+        contract_address=getattr(web3_connect, "CONTRACT_ADDRESS", ""),
+        contract_abi=getattr(web3_connect, "CONTRACT_ABI", []),
+        explorer_base=CRONOS_TESTNET_EXPLORER
+    )
 
-    return render_template('dashboard.html', 
-                           user=user, 
-                           role=role,
-                           session=session, 
-                           products=my_products,
-                           chart_labels=labels,
-                           chart_data=data)
+@app.route("/api/tx_record", methods=["POST"])
+@require_wallet
+def api_tx_record():
+    data = request.get_json(force=True)
+    wallet = session["wallet"]
 
-# --- CÁC ROUTE KHÔNG CÒN DÙNG TRÊN REAL BLOCKCHAIN ---
-# Vì Blockchain thật không thể hack và không thể khôi phục,
-# ta trả về thông báo mặc định để giao diện không bị lỗi.
+    if data.get("wallet", "").lower() != wallet.lower():
+        return {"ok": False, "error": "Wallet mismatch"}, 403
 
-@app.route('/validate_chain')
-def validate_chain():
-    return {
-        "status": "An toàn",
-        "error_block": None
-    }
+    db.db.user_txs.insert_one({
+        "wallet": wallet,
+        "batch_code": data.get("batch_code"),
+        "tx_hash": data.get("tx_hash"),
+        "action": data.get("action", ""),
+        "timestamp": int(data.get("timestamp", 0) or 0),
+        "contract": getattr(web3_connect, "CONTRACT_ADDRESS", ""),
+        "saved_at": datetime.datetime.utcnow()
+    })
+    return {"ok": True}
 
-@app.route('/recover_chain', methods=['POST'])
-def recover_chain():
-    return {"message": "Blockchain công khai không hỗ trợ sửa đổi lịch sử!", "status": "error"}
+@app.route("/products")
+@require_wallet
+def products():
+    wallet = session["wallet"]
+    batch_codes = db.db.user_txs.find({"wallet": wallet}).distinct("batch_code")
+    all_chain = web3_connect.lay_danh_sach_blockchain() or []
+
+    latest = []
+    for code in batch_codes:
+        items = [x for x in all_chain if x.get("batch_code") == code]
+        if items:
+            p = items[0]
+            try:
+                ts = int(p.get("timestamp", 0) or 0)
+                p["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                p["timestamp_fmt"] = ""
+            latest.append(p)
+
+    return render_template("products.html", wallet=wallet, products=latest)
+
+
+
+@app.route("/products/<batch_code>")
+@require_wallet
+def product_detail(batch_code):
+    # Trang chi tiết PRIVATE: chỉ xem được lô thuộc ví đã lưu tx
+    wallet = session["wallet"]
+    owned = db.db.user_txs.find_one({"wallet": wallet, "batch_code": batch_code})
+    if not owned:
+        return "Forbidden", 403
+
+    history = web3_connect.tim_kiem_blockchain(batch_code) or []
+    try:
+        history = sorted(history, key=lambda x: int(x.get("timestamp", 0) or 0))
+    except Exception:
+        pass
+
+    for h in history:
+        try:
+            ts = int(h.get("timestamp", 0) or 0)
+            h["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+        except Exception:
+            h["timestamp_fmt"] = ""
+
+    txs = list(db.db.user_txs.find(
+        {"wallet": wallet, "batch_code": batch_code},
+        {"_id": 0}
+    ).sort("timestamp", -1))
+
+    return render_template(
+        "product_detail.html",
+        wallet=wallet,
+        batch_code=batch_code,
+        history=history,
+        txs=txs,
+        explorer_base=CRONOS_TESTNET_EXPLORER,
+        contract_address=getattr(web3_connect, "CONTRACT_ADDRESS", "")
+    )
+
+
+@app.route("/trace/<batch_code>")
+def trace_public(batch_code):
+    history = web3_connect.tim_kiem_blockchain(batch_code) or []
+    try:
+        history = sorted(history, key=lambda x: int(x.get("timestamp", 0) or 0))
+    except Exception:
+        pass
+    for h in history:
+        try:
+            ts = int(h.get("timestamp", 0) or 0)
+            h["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+        except Exception:
+            h["timestamp_fmt"] = ""
+    return render_template(
+        "product_detail_public.html",
+        batch_code=batch_code,
+        history=history,
+        explorer_base=CRONOS_TESTNET_EXPLORER,
+        contract_address=getattr(web3_connect, "CONTRACT_ADDRESS", "")
+    )
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

@@ -1,38 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Đăng nhập AgriChain</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriChain - Đăng nhập</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <div class="container mt-5" style="max-width: 400px;">
-        <h2 class="text-center text-success">🌱 AgriChain Login</h2>
-        
-        {% if thong_bao %}
-        <div class="alert alert-info">{{ thong_bao }}</div>
-        {% endif %}
 
-        <div class="card p-4 shadow">
-            <form method="POST">
-                <div class="mb-3">
-                    <label>Tài khoản</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Vai trò (Nếu đăng ký)</label>
-                    <select name="role" class="form-control">
-                        <option value="farmer">Nông dân (Giai đoạn 1)</option>
-                        <option value="factory">Nhà máy (Giai đoạn 2)</option>
-                    </select>
-                </div>
-                <button type="submit" name="action" value="login" class="btn btn-primary w-100 mb-2">Đăng Nhập</button>
-                <button type="submit" name="action" value="register" class="btn btn-outline-success w-100">Đăng Ký Mới</button>
-            </form>
-        </div>
+  <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <a class="btn btn-outline-secondary" href="/">← Quay lại trang chủ</a>
+      <h3 class="m-0 text-success fw-bold">AgriChain</h3>
+      <div style="width:160px"></div>
     </div>
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="mb-3">Đăng nhập bằng MetaMask</h5>
+            <div class="alert alert-info">
+              Nhấn <b>Đăng nhập</b> để kết nối MetaMask. Nếu ví chưa đăng ký, hệ thống sẽ yêu cầu chọn phân quyền.
+            </div>
+
+            <button id="btnLogin" type="button" class="btn btn-success w-100">🦊 Đăng nhập</button>
+
+            <div id="roleBox" class="mt-3" style="display:none;">
+              <label class="form-label fw-bold">Chọn phân quyền</label>
+              <select id="roleSelect" class="form-select">
+                <option value="farmer">Nhà nông (farmer)</option>
+                <option value="factory">Nhà máy (factory)</option>
+              </select>
+              <button id="btnRegisterRole" type="button" class="btn btn-primary w-100 mt-2">Xác nhận đăng ký</button>
+            </div>
+
+            <div id="msg" class="text-danger small mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+async function fetchJSON(url, options){
+  const r = await fetch(url, options);
+  const data = await r.json().catch(()=> ({}));
+  if(!r.ok) throw new Error(data.error || r.statusText || "Request failed");
+  return data;
+}
+
+async function connectWallet(){
+  if(!window.ethereum) throw new Error("Chưa cài MetaMask");
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+  return accounts[0];
+}
+
+async function getNonceMessage(){
+  // ưu tiên GET (đa số project dùng GET). Nếu server dùng POST thì fallback.
+  try{
+    return await fetchJSON("/api/nonce", { method: "GET" });
+  }catch(e){
+    return await fetchJSON("/api/nonce", { method: "POST" });
+  }
+}
+
+async function signNonce(address){
+  const nonceRes = await getNonceMessage();
+  const message = nonceRes.message || nonceRes.nonce || nonceRes.text;
+  if(!message) throw new Error("Server không trả về nonce/message");
+  const signature = await window.ethereum.request({
+    method: "personal_sign",
+    params: [message, address]
+  });
+  return { signature };
+}
+
+async function verify(address, signature){
+  return await fetchJSON("/api/verify", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ address, signature })
+  });
+}
+
+async function registerRole(role){
+  return await fetchJSON("/api/register_role", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ role })
+  });
+}
+
+const msgEl = document.getElementById("msg");
+const roleBox = document.getElementById("roleBox");
+
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  msgEl.textContent = "";
+  try{
+    const address = await connectWallet();
+    const { signature } = await signNonce(address);
+    const res = await verify(address, signature);
+
+    if(res.need_register){
+      roleBox.style.display = "block";
+      msgEl.textContent = "Ví chưa đăng ký. Hãy chọn phân quyền rồi xác nhận.";
+      return;
+    }
+    window.location.href = "/dashboard";
+  }catch(e){
+    msgEl.textContent = e.message || String(e);
+  }
+});
+
+document.getElementById("btnRegisterRole").addEventListener("click", async () => {
+  msgEl.textContent = "";
+  try{
+    const role = document.getElementById("roleSelect").value;
+    await registerRole(role);
+    window.location.href = "/dashboard";
+  }catch(e){
+    msgEl.textContent = e.message || String(e);
+  }
+});
+</script>
+
 </body>
 </html>

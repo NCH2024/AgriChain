@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
+    
     <title>Hệ thống Quản lý AgriChain</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         body { background-color: #f4f6f9; }
         .card { border: none; box-shadow: 0 0 15px rgba(0,0,0,0.05); }
@@ -70,10 +71,11 @@
         <a class="navbar-brand fw-bold" href="#"><i class="fas fa-leaf"></i> AgriChain Manager</a>
         <div class="ms-auto d-flex align-items-center text-white">
             <span class="me-3">
-                Xin chào, <strong>{{ user }}</strong> 
+               Xin chào, <strong>{{ wallet }}</strong>
                 <span class="badge bg-light text-success ms-1">{{ session.get('role') }}</span>
             </span>
-            <a href="/logout" class="btn btn-sm btn-outline-light">Đăng xuất</a>
+            <a href="/products" class="btn btn-sm btn-outline-light me-2">📦 Danh sách sản phẩm</a>
+            <a href="/logout" class="btn btn-sm btn-outline-light ms-3">Đăng xuất</a>
         </div>
     </nav>
 
@@ -106,36 +108,42 @@
                             
                             {% if session['role'] == 'farmer' %}
                             <div class="tab-pane fade show active" id="create" role="tabpanel">
-                                <form method="POST" action="/dashboard" enctype="multipart/form-data">
+                                
+                                <div class="alert alert-warning py-2 small">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Lưu ý: Giao dịch Blockchain được ký bằng MetaMask. File ảnh ở đây <b>không được gửi lên Blockchain</b>.
+                                    Nếu bạn muốn lưu ảnh, hãy upload lên server/IPFS riêng rồi lưu URL vào phần Ghi chú chi tiết.
+                                </div>
+                                <form method="POST" action="/dashboard" enctype="multipart/form-data" onsubmit="return false;">
                                     <input type="hidden" name="mode" value="create">
                                     
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Mã Lô Hàng (Batch Code)</label>
-                                        <input type="text" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
+                                        <input type="text" id="create_batch" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
                                         <div class="form-text">Mã này là duy nhất cho mỗi đợt hàng.</div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Tên Nông Sản</label>
-                                        <input type="text" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ" required>
+                                        <input type="text" id="create_product" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ" required>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Hành động khởi tạo</label>
-                                        <input type="text" name="action" class="form-control" value="Gieo trồng / Khởi tạo" required>
+                                        <input type="text" id="create_action" name="action" class="form-control" value="Gieo trồng / Khởi tạo" required>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label">Ghi chú chi tiết</label>
-                                        <textarea name="details" class="form-control" rows="3"></textarea>
+                                        <textarea id="create_details" name="details" class="form-control" rows="3"></textarea>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">Minh chứng hình ảnh</label>
-                                        <input type="file" name="image_file" class="form-control" accept="image/*">
+                                        <input type="file" id="create_image" name="image_file" class="form-control" accept="image/*">
                                     </div>
 
-                                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-plus-circle"></i> Tạo Lô Hàng Mới</button>
+                                    <button type="button" class="btn btn-success w-100" onclick="createBatch()"><i class="fas fa-plus-circle"></i> Tạo Lô Hàng Mới (MetaMask)</button>
                                 </form>
                             </div>
                             {% endif %}
@@ -144,17 +152,22 @@
                                 <div class="alert alert-info py-2 small">
                                     <i class="fas fa-info-circle"></i> Nhập đúng <b>Mã Lô Hàng</b> cũ để nối tiếp quy trình.
                                 </div>
-                                <form method="POST" action="/dashboard" enctype="multipart/form-data">
+                                <form method="POST" action="/dashboard" enctype="multipart/form-data" onsubmit="return false;">
                                     <input type="hidden" name="mode" value="update">
 
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Nhập Mã Lô Hàng Cần Cập Nhật</label>
-                                        <input type="text" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
+                                        <input type="text" id="update_batch" name="batch_code" class="form-control" placeholder="VD: RAU_001" required>
                                     </div>
 
                                     <div class="mb-3">
+                                        <label class="form-label fw-bold">Tên Nông Sản (nếu cần)</label>
+                                        <input type="text" id="update_product" name="product_type" class="form-control" placeholder="VD: Cải Bắp Hữu Cơ (có thể để trống)">
+                                        <div class="form-text">Nếu để trống, hệ thống sẽ ghi "N/A" trên Blockchain.</div>
+                                    </div>
+                                    <div class="mb-3">
                                         <label class="form-label fw-bold">Hành động tiếp theo</label>
-                                        <select name="action" class="form-select">
+                                        <select id="update_action" name="action" class="form-select">
                                             {% if session['role'] == 'farmer' %}
                                                 <option value="Chăm sóc / Tưới nước">Chăm sóc / Tưới nước</option>
                                                 <option value="Bón phân">Bón phân</option>
@@ -173,15 +186,15 @@
 
                                     <div class="mb-3">
                                         <label class="form-label">Chi tiết hoạt động</label>
-                                        <textarea name="details" class="form-control" rows="3"></textarea>
+                                        <textarea id="update_details" name="details" class="form-control" rows="3"></textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label">Minh chứng hình ảnh</label>
-                                        <input type="file" name="image_file" class="form-control" accept="image/*">
+                                        <input type="file" id="update_image" name="image_file" class="form-control" accept="image/*">
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái</button>
+                                    <button type="button" class="btn btn-primary w-100" onclick="updateBatch()"><i class="fas fa-sync-alt"></i> Cập Nhật Trạng Thái (MetaMask)</button>
                                 </form>
                             </div>
                         </div>
@@ -275,7 +288,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
     <script>
         // Lấy dữ liệu từ Python truyền sang (Server-side rendering)
@@ -386,7 +399,158 @@
             }
         }
     </script>
-    </body>
-</html>
+    
+
+    <script>
+      // ====== MetaMask / Ethers: Ghi log lên Cronos Testnet ======
+      // Yêu cầu app.py render dashboard phải truyền: contract_abi=web3_connect.CONTRACT_ABI
+      const CONTRACT_ADDRESS = "0x1228BC01B160D2da1932dc378C9c8689F002a9b7";
+      const CONTRACT_ABI = {{ contract_abi | tojson }};
+      const EXPLORER_TX = (h) => `https://explorer.cronos.org/testnet/tx/${h}`;
+
+      async function getContractAndWallet() {
+        if (!window.ethereum) {
+          Swal.fire({icon:'error', title:'Thiếu MetaMask', text:'Bạn chưa cài MetaMask hoặc trình duyệt không hỗ trợ.'});
+          throw new Error('No MetaMask');
+        }
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        const signer = provider.getSigner();
+        const wallet = await signer.getAddress();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        return { wallet, contract };
+      }
+
+      
+      async function uploadImageFromInput(inputId, batch_code, action, tx_hash) {
+        const el = document.getElementById(inputId);
+        if (!el || !el.files || el.files.length === 0) return null;
+
+        const file = el.files[0];
+        const fd = new FormData();
+        fd.append("image", file);
+        fd.append("batch_code", batch_code);
+        fd.append("action", action || "");
+        fd.append("tx_hash", tx_hash || "");
+
+        const res = await fetch("/api/upload_image", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!data.ok) {
+          throw new Error(data.error || "Upload image failed");
+        }
+        return data.image_id;
+      }
+
+      async function getLatestProductType(batch_code) {
+        const res = await fetch(`/api/batch_latest/${encodeURIComponent(batch_code)}`);
+        const data = await res.json();
+        if (!data.ok) return null;
+        return data.product_type || null;
+      }
+
+
+async function saveTx(wallet, batch_code, tx_hash, action, image_id) {
+        await fetch('/api/tx_record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet,
+            batch_code,
+            tx_hash,
+            action,
+            image_id: image_id || null,
+            timestamp: Math.floor(Date.now()/1000)
+          })
+        });
+      }
+
+      function warnImageNotUploadedIfSelected(inputId) {
+        const el = document.getElementById(inputId);
+        if (el && el.files && el.files.length > 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Lưu ý về hình ảnh',
+            text: 'Ở phiên bản MetaMask, hình ảnh KHÔNG được upload lên server vì form không submit. Nếu bạn muốn lưu ảnh, cần làm API upload riêng (mình có thể hướng dẫn thêm).'
+          });
+        }
+      }
+
+      async function createBatch() {
+        try {
+          const batch_code = document.getElementById('create_batch').value.trim();
+          const product_type = document.getElementById('create_product').value.trim();
+          const action = document.getElementById('create_action').value.trim();
+          const details = document.getElementById('create_details').value.trim();
+
+          if (!batch_code || !product_type || !action) {
+            Swal.fire({icon:'warning', title:'Thiếu dữ liệu', text:'Vui lòng nhập đầy đủ Mã lô, Tên nông sản và Hành động.'});
+            return;
+          }
+
+          warnImageNotUploadedIfSelected('create_image');
+
+          const { wallet, contract } = await getContractAndWallet();
+
+          Swal.fire({title:'Đang gửi giao dịch...', html:'MetaMask sẽ hiện popup để bạn xác nhận.', didOpen: () => Swal.showLoading()});
+          const tx = await contract.themNhatKy(batch_code, product_type, action, details || '');
+          Swal.fire({
+            icon:'success',
+            title:'Đã gửi giao dịch!',
+            html: `TX: <a target="_blank" href="${EXPLORER_TX(tx.hash)}">${tx.hash}</a>`
+          });
+
+          const image_id = await uploadImageFromInput('create_image', batch_code, action, tx.hash);
+          await saveTx(wallet, batch_code, tx.hash, action, image_id);
+          window.location.href = '/products';
+        } catch (e) {
+          console.error(e);
+          Swal.fire({icon:'error', title:'Lỗi tạo lô', text: e?.message || String(e)});
+        }
+      }
+
+      async function updateBatch() {
+        try {
+          const batch_code = document.getElementById('update_batch').value.trim();
+          const action = document.getElementById('update_action').value.trim();
+          const details = document.getElementById('update_details').value.trim();
+          const product_type_input = document.getElementById('update_product');
+          let product_type = (product_type_input ? product_type_input.value.trim() : '');
+          if (!product_type) {
+            const latestType = await getLatestProductType(batch_code);
+            if (!latestType) {
+              Swal.fire({icon:'error', title:'Mã lô không tồn tại', text:'Không tìm thấy mã lô trên blockchain. Hãy nhập đúng mã lô đã có.'});
+              return;
+            }
+            product_type = latestType;
+          }
+
+          if (!batch_code || !action) {
+            Swal.fire({icon:'warning', title:'Thiếu dữ liệu', text:'Vui lòng nhập Mã lô và chọn Hành động.'});
+            return;
+          }
+
+          warnImageNotUploadedIfSelected('update_image');
+
+          const { wallet, contract } = await getContractAndWallet();
+
+          Swal.fire({title:'Đang gửi giao dịch...', html:'MetaMask sẽ hiện popup để bạn xác nhận.', didOpen: () => Swal.showLoading()});
+          const tx = await contract.themNhatKy(batch_code, product_type, action, details || '');
+
+          Swal.fire({
+            icon:'success',
+            title:'Đã gửi giao dịch cập nhật!',
+            html: `TX: <a target="_blank" href="${EXPLORER_TX(tx.hash)}">${tx.hash}</a>`
+          });
+
+          const image_id = await uploadImageFromInput('create_image', batch_code, action, tx.hash);
+          await saveTx(wallet, batch_code, tx.hash, action, image_id);
+          window.location.href = '/products/' + encodeURIComponent(batch_code);
+        } catch (e) {
+          console.error(e);
+          Swal.fire({icon:'error', title:'Lỗi cập nhật', text: e?.message || String(e)});
+        }
+      }
+    </script>
+
 </body>
 </html>
