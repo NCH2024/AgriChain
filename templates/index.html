@@ -155,7 +155,7 @@
                         <img src="/image/{{ p.image_id }}" class="w-100 h-100 object-fit-cover transition-transform">
                     {% else %}
                         <img src="/static/image/blockchain.gif" class="opacity-25 w-50 object-fit-container position-absolute top-50 start-50 translate-middle">
-                       
+                        
                     {% endif %}
                     
                     <span class="position-absolute top-0 start-0 m-3 badge bg-white text-dark shadow-sm border">
@@ -180,10 +180,13 @@
     </div>
 
     {% if products|length > 8 %}
-    
-    <div class="text-center mt-5">
-        <button id="btn-load-more" class="btn btn-white border shadow-sm px-5 py-2 rounded-pill text-muted hover-primary">
-            Xem thêm {{ products|length - 8 }} lô hàng nữa <i class="fas fa-arrow-down ms-2"></i>
+    <div class="text-center mt-5 d-flex justify-content-center gap-3" id="action-buttons">
+        <button id="btn-load-more" class="btn btn-white border shadow-sm px-5 py-2 rounded-pill text-muted hover-primary transition-all">
+            Xem thêm <i class="fas fa-chevron-down ms-2"></i>
+        </button>
+        
+        <button id="btn-collapse" class="btn btn-lemon-outline border shadow-sm px-4 py-2 rounded-pill d-none animate__animated animate__fadeIn">
+            <i class="fas fa-compress-arrows-alt me-2"></i>Thu nhỏ
         </button>
     </div>
     {% endif %}
@@ -296,25 +299,74 @@
     .transition-transform { transition: transform 0.5s ease; }
     .group-hover-effect:hover .transition-transform { transform: scale(1.05); }
     .cursor-pointer { cursor: pointer; }
+    
+    /* Hiệu ứng mờ cho nút */
+    .btn-lemon-outline {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+    }
+    .btn-lemon-outline:hover {
+        background: var(--primary-color);
+        color: white;
+    }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Giữ nguyên logic nút Xem thêm
-    const btnLoadMore = document.getElementById('btn-load-more');
-    if (btnLoadMore) {
-        btnLoadMore.addEventListener('click', function() {
-            const hiddenItems = document.querySelectorAll('.product-item.d-none');
-            hiddenItems.forEach(item => {
-                item.classList.remove('d-none');
-                // Hiệu ứng fade in đơn giản
-                item.style.opacity = 0;
-                setTimeout(() => item.style.opacity = 1, 50);
-                item.style.transition = 'opacity 0.5s';
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnLoadMore = document.getElementById('btn-load-more');
+        const btnCollapse = document.getElementById('btn-collapse');
+        const items = document.querySelectorAll('.product-item');
+        const BATCH_SIZE = 4; // Mỗi lần hiện thêm 1 hàng (4 lô)
+        const INITIAL_VISIBLE = 8; // Số lượng ban đầu
+
+        if (btnLoadMore && btnCollapse) {
+            
+            // --- XỬ LÝ NÚT XEM THÊM ---
+            btnLoadMore.addEventListener('click', function() {
+                // Tìm các phần tử đang ẩn
+                const hiddenItems = document.querySelectorAll('.product-item.d-none');
+                
+                // Hiện thêm BATCH_SIZE phần tử tiếp theo
+                for (let i = 0; i < BATCH_SIZE && i < hiddenItems.length; i++) {
+                    const item = hiddenItems[i];
+                    item.classList.remove('d-none');
+                    // Thêm hiệu ứng fade in cho mượt
+                    item.style.opacity = 0;
+                    setTimeout(() => item.style.opacity = 1, 50);
+                    item.style.transition = 'opacity 0.5s';
+                }
+
+                // Kiểm tra xem còn phần tử ẩn nào không
+                const remainingHidden = document.querySelectorAll('.product-item.d-none').length;
+                if (remainingHidden === 0) {
+                    // Nếu hết rồi thì ẩn nút Xem thêm đi
+                    btnLoadMore.classList.add('d-none');
+                }
+
+                // Luôn hiện nút Thu nhỏ khi đã bấm Xem thêm
+                btnCollapse.classList.remove('d-none');
             });
-            this.style.display = 'none';
-        });
-    }
+
+            // --- XỬ LÝ NÚT THU NHỎ ---
+            btnCollapse.addEventListener('click', function() {
+                // Duyệt qua tất cả items, ẩn đi những cái có index >= INITIAL_VISIBLE
+                items.forEach((item, index) => {
+                    if (index >= INITIAL_VISIBLE) {
+                        item.classList.add('d-none');
+                    }
+                });
+
+                // Reset trạng thái nút
+                btnLoadMore.classList.remove('d-none'); // Hiện lại nút Xem thêm
+                btnCollapse.classList.add('d-none');    // Ẩn nút Thu nhỏ đi
+                
+                // Cuộn nhẹ lên đầu danh sách để người dùng biết đã thu gọn
+                document.getElementById('product-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+    });
 </script>
 {% endblock %}

@@ -23,6 +23,12 @@ cloudinary.config(
 db = DatabaseManager()
 register_wallet_routes(app, db)
 
+def fmt_ts(ts):
+    try:
+        return datetime.datetime.fromtimestamp(int(ts)).strftime("%d/%m/%Y %H:%M")
+    except:
+        return ""
+
 
 @app.template_filter('ctime')
 def timectime(s):
@@ -129,22 +135,26 @@ def api_tx_record():
 @require_wallet
 def products():
     wallet = session["wallet"]
-    batch_codes = db.db.user_txs.find({"wallet": wallet}).distinct("batch_code")
-    all_chain = web3_connect.lay_danh_sach_blockchain() or []
 
-    latest = []
-    for code in batch_codes:
-        items = [x for x in all_chain if x.get("batch_code") == code]
-        if items:
-            p = items[0]
-            try:
-                ts = int(p.get("timestamp", 0) or 0)
-                p["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
-            except Exception:
-                p["timestamp_fmt"] = ""
-            latest.append(p)
+    pipeline = [
+        {"$match": {"wallet": wallet}},
+        {"$sort": {"timestamp": -1}},
+        {"$group": {
+            "_id": "$batch_code",
+            "batch_code": {"$first": "$batch_code"},
+            "product_type": {"$first": "$product_type"},
+            "image_id": {"$first": "$image_id"},
+            "action": {"$first": "$action"},
+            "timestamp": {"$first": "$timestamp"}
+        }}
+    ]
 
-    return render_template("products.html", wallet=wallet, products=latest)
+    products = list(db.db.user_txs.aggregate(pipeline))
+    for p in products:
+        p["timestamp_fmt"] = fmt_ts(p.get("timestamp"))
+        p["product_type"] = p.get("product_type") or "Chưa xác định"
+
+    return render_template("products.html", products=products)
 
 @app.route("/products/<batch_code>")
 @require_wallet
@@ -333,7 +343,7 @@ def index():
                 p["timestamp_fmt"] = ""
             latest_map[code] = p
             
-    products = list(latest_map.values())[:8] # Lấy 8 lô hàng mới nhất sau khi lọc
+    products = list(latest_map.values())
 
     # 3. Logic Slideshow (Giữ nguyên)
     slideshow_images = []
