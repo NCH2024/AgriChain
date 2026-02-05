@@ -328,8 +328,7 @@ def index():
 
     # 2. Logic danh sách sản phẩm (TỐI ƯU: Lấy từ MongoDB thay vì Blockchain)
     # Thay vì gọi web3_connect, ta lấy từ collection user_txs
-    # Lấy 8 giao dịch mới nhất để hiện lên trang chủ
-    raw_products = list(db.db.user_txs.find().sort("timestamp", -1).limit(20)) 
+    raw_products = list(db.db.user_txs.find().sort("timestamp", -1).limit(100)) 
     
     # Lọc lấy các lô hàng duy nhất (tránh hiện 1 lô nhiều lần nếu có nhiều update)
     latest_map = {}
