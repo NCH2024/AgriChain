@@ -66,6 +66,7 @@ a:hover { color: var(--accent-color); }
     box-shadow: var(--glass-shadow);
     padding: 24px;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+    z-index: -1;
 }
 .glass-box:hover {
     transform: translateY(-3px);
@@ -181,6 +182,7 @@ a:hover { color: var(--accent-color); }
 .hover-warning:hover { color: #f59e0b !important; transition: 0.3s; }
 
 /* 2. Navbar Modern (Dành riêng cho Header) */
+
 .navbar-glass {
     background: rgba(255, 255, 255, 0.527) !important;
     backdrop-filter: blur(20px);
@@ -255,12 +257,21 @@ a:hover { color: var(--accent-color); }
     position: relative;
 }
 
-/* Sóng nước SVG */
+/* --- Cập nhật lại Main để luôn có khoảng cách an toàn với Footer --- */
+main {
+    padding-bottom: 80px !important; /* Tạo khoảng trống đủ cho con sóng 60px */
+}
+
+/* --- Chỉnh lại z-index của Sóng để nó không đè lên các nút bấm --- */
 .custom-shape-divider-top {
     position: absolute;
-    top: 0; left: 0; width: 100%;
-    overflow: hidden; line-height: 0;
-    transform: translateY(-99%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    transform: translateY(-100%); /* Đẩy lên khít mép */
+    z-index: -1; /* Đưa sóng xuống dưới để không chặn chuột/che chữ */
 }
 .custom-shape-divider-top svg {
     position: relative; display: block;
@@ -289,6 +300,13 @@ a:hover { color: var(--accent-color); }
 }
 
 /* Input Newsletter Footer */
+.footer-modern {
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%);
+    color: white;
+    margin-top: 100px !important; /* Tăng khoảng cách margin-top */
+    position: relative;
+}
+
 .footer-modern .form-control {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);

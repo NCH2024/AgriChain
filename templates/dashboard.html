@@ -23,7 +23,7 @@
         </div>
         <div class="d-flex gap-2">
             <a href="/products" class="btn btn-outline-lemon shadow-sm"><i class="fas fa-boxes me-2"></i> Kho hàng</a>
-            <a href="/logout" class="btn btn-danger bg-opacity-10 text-danger border-0 fw-bold px-3"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="/logout" class="btn btn-danger bg-opacity-10 text-danger border-0 fw-bold px-3"><i class="fas fa-sign-out-alt" style="color: white;"></i></a>
         </div>
     </div>
 
@@ -358,11 +358,21 @@
         } catch (e) { return null; }
     }
 
-    async function saveTx(wallet, batch_code, tx_hash, action, image_id) {
+    // Thêm tham số product_type vào hàm
+    async function saveTx(wallet, batch_code, product_type, tx_hash, action, image_id) {
         await fetch('/api/tx_record', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ wallet, batch_code, tx_hash, action, image_id, timestamp: Math.floor(Date.now()/1000) })
+            // Thêm product_type vào body để gửi lên Server
+            body: JSON.stringify({ 
+                wallet, 
+                batch_code, 
+                product_type, 
+                tx_hash, 
+                action, 
+                image_id, 
+                timestamp: Math.floor(Date.now()/1000) 
+            })
         });
     }
 
@@ -406,10 +416,13 @@
             const { wallet, contract } = await getContractAndWallet();
             Swal.fire({ title: 'Đang gửi giao dịch...', didOpen: () => Swal.showLoading() });
             
+            // Trong hàm createBatch, đoạn gần cuối
             const tx = await contract.themNhatKy(batch, product, action, details || '');
             const imgId = await uploadImageFromInput('create_image', batch, action, tx.hash);
-            await saveTx(wallet, batch, tx.hash, action, imgId);
-            
+
+            // Thêm biến 'product' vào lệnh gọi này
+            await saveTx(wallet, batch, product, tx.hash, action, imgId); 
+
             Swal.fire('Thành công', 'Đã tạo lô hàng mới!', 'success').then(() => location.reload());
         } catch (e) {
             Swal.fire('Lỗi', e.message || e.toString(), 'error');
@@ -442,9 +455,12 @@
             const { wallet, contract } = await getContractAndWallet();
             Swal.fire({ title: 'Đang cập nhật...', didOpen: () => Swal.showLoading() });
 
+            // Trong hàm updateBatch, đoạn gần cuối
             const tx = await contract.themNhatKy(batch, product, action, details || '');
             const imgId = await uploadImageFromInput('update_image', batch, action, tx.hash);
-            await saveTx(wallet, batch, tx.hash, action, imgId);
+
+            // Thêm biến 'product' vào lệnh gọi này
+            await saveTx(wallet, batch, product, tx.hash, action, imgId);
 
             Swal.fire('Thành công', 'Đã cập nhật trạng thái!', 'success').then(() => location.reload());
         } catch (e) {
@@ -452,9 +468,28 @@
         }
     }
     
-    function kiemTraHack() {
-        Swal.fire({ title: 'Đang quét hệ thống...', timer: 2000, didOpen: () => Swal.showLoading() })
-            .then(() => Swal.fire('An toàn', 'Hệ thống hoạt động bình thường.', 'success'));
+    async function kiemTraHack() {
+        Swal.fire({ title: 'Đang quét & đồng bộ...', didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch('/api/sync_blockchain', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.ok) {
+                Swal.fire(
+                    'Hoàn tất!',
+                    `Đã kiểm tra ${data.result.checked} bản ghi
+                    Thêm mới: ${data.result.added}
+                    Cập nhật: ${data.result.updated}`,
+                    'success'
+                ).then(() => location.reload());
+            } else {
+                throw new Error("Sync failed");
+            }
+        } catch (e) {
+            Swal.fire('Lỗi', e.message || 'Không thể đồng bộ', 'error');
+        }
     }
+
 </script>
 {% endblock %}

@@ -112,17 +112,15 @@ def api_tx_record():
     data = request.get_json(force=True)
     wallet = session["wallet"]
 
-    if data.get("wallet", "").lower() != wallet.lower():
-        return {"ok": False, "error": "Wallet mismatch"}, 403
-
+    # Đảm bảo có đầy đủ thông tin trước khi lưu
     db.db.user_txs.insert_one({
         "wallet": wallet,
         "batch_code": data.get("batch_code"),
+        "product_type": data.get("product_type"), 
         "tx_hash": data.get("tx_hash"),
         "action": data.get("action", ""),
         "image_id": data.get("image_id"), 
         "timestamp": int(data.get("timestamp", 0) or 0),
-        "contract": getattr(web3_connect, "CONTRACT_ADDRESS", ""),
         "saved_at": datetime.datetime.utcnow()
     })
     return {"ok": True}
@@ -309,7 +307,7 @@ def contact():
 # --- ĐÂY LÀ HÀM INDEX DUY NHẤT (ĐÃ GỘP TÍNH NĂNG SLIDESHOW) ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # 1. Logic tìm kiếm
+    # 1. Logic tìm kiếm (Chỉ chạy khi người dùng bấm nút tìm - Nên giữ Blockchain để chính xác nhất)
     ket_qua_tra_cuu = None
     if request.method == 'POST':
         code = (request.form.get('search_code') or '').strip()
@@ -318,24 +316,26 @@ def index():
             for item in ket_qua_tra_cuu:
                 item["image_id"] = db.lay_anh_dai_dien(item["batch_code"])
 
-    # 2. Logic danh sách sản phẩm
-    all_chain = web3_connect.lay_danh_sach_blockchain() or []
+    # 2. Logic danh sách sản phẩm (TỐI ƯU: Lấy từ MongoDB thay vì Blockchain)
+    # Thay vì gọi web3_connect, ta lấy từ collection user_txs
+    # Lấy 8 giao dịch mới nhất để hiện lên trang chủ
+    raw_products = list(db.db.user_txs.find().sort("timestamp", -1).limit(20)) 
+    
+    # Lọc lấy các lô hàng duy nhất (tránh hiện 1 lô nhiều lần nếu có nhiều update)
     latest_map = {}
-    for item in all_chain:
-        code = item.get("batch_code")
-        if not code: continue
-        if code not in latest_map:
+    for p in raw_products:
+        code = p.get("batch_code")
+        if code and code not in latest_map:
             try:
-                ts = int(item.get("timestamp", 0) or 0)
-                item["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
+                ts = int(p.get("timestamp", 0) or 0)
+                p["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
             except Exception:
-                item["timestamp_fmt"] = ""
-            latest_map[code] = item
-    products = list(latest_map.values())
-    for p in products:
-        p["image_id"] = db.lay_anh_dai_dien(p["batch_code"])
+                p["timestamp_fmt"] = ""
+            latest_map[code] = p
+            
+    products = list(latest_map.values())[:8] # Lấy 8 lô hàng mới nhất sau khi lọc
 
-    # 3. Logic Slideshow
+    # 3. Logic Slideshow (Giữ nguyên)
     slideshow_images = []
     try:
         slideshow_dir = os.path.join(app.static_folder, 'slideshow')
@@ -381,6 +381,74 @@ def delete_account():
         return jsonify({"ok": True, "msg": "Tài khoản của bạn đã được xoá thành công."})
     else:
         return jsonify({"ok": False, "msg": "Có lỗi xảy ra khi xoá tài khoản."})
+    
+@app.route("/api/sync_blockchain", methods=["POST"])
+@require_wallet
+def sync_blockchain():
+    wallet = session["wallet"]
+
+    chain_data = web3_connect.lay_danh_sach_blockchain() or []
+    mongo_data = list(db.db.user_txs.find({"wallet": wallet}))
+
+    mongo_map = {}
+    for m in mongo_data:
+        key = f"{m.get('batch_code')}|{m.get('action')}|{m.get('timestamp')}"
+        mongo_map[key] = m
+
+    stats = {
+        "added": 0,
+        "updated": 0,
+        "checked": len(chain_data)
+    }
+
+    for c in chain_data:
+        batch = c.get("batch_code")
+        action = c.get("action")
+        ts = int(c.get("timestamp", 0) or 0)
+
+        key = f"{batch}|{action}|{ts}"
+
+        if key not in mongo_map:
+            # 👉 Case 1: Blockchain có – MongoDB không có
+            db.db.user_txs.insert_one({
+                "wallet": wallet,
+                "batch_code": batch,
+                "product_type": c.get("product_type"),
+                "action": action,
+                "timestamp": ts,
+                "tx_hash": c.get("tx_hash", ""),
+                "image_id": None,
+                "synced_from_chain": True,
+                "saved_at": datetime.datetime.utcnow()
+            })
+            stats["added"] += 1
+        else:
+            m = mongo_map[key]
+            need_update = False
+            update_fields = {}
+
+            # 👉 Case 2: thiếu product_type
+            if not m.get("product_type") and c.get("product_type"):
+                update_fields["product_type"] = c.get("product_type")
+                need_update = True
+
+            # 👉 Case 3: sai timestamp
+            if int(m.get("timestamp", 0)) != ts:
+                update_fields["timestamp"] = ts
+                need_update = True
+
+            if need_update:
+                db.db.user_txs.update_one(
+                    {"_id": m["_id"]},
+                    {"$set": update_fields}
+                )
+                stats["updated"] += 1
+
+    return {
+        "ok": True,
+        "result": stats
+    }
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5000)
