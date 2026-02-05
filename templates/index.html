@@ -66,7 +66,31 @@
     </div>
 </div>
 {% endblock %}
-
+    {% block marquee %}
+<div class="marquee-wrapper border-top border-bottom border-light border-opacity-10">
+    <div class="marquee-content">
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+    </div>
+    
+    <div class="marquee-content">
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+        <span>AGRICHAIN</span>
+    </div>
+</div>
+{% endblock %}
 {% block content %}
 <div class="container pb-5">
     
@@ -130,7 +154,7 @@
                     {% if p.image_id %}
                         <img src="/image/{{ p.image_id }}" class="w-100 h-100 object-fit-cover transition-transform">
                     {% else %}
-                        <img src="/static/image/blockchain.gif" class="opacity-25 w-75 h-75 object-fit-container position-absolute top-50 start-50 translate-middle">
+                        <img src="/static/image/blockchain.gif" class="opacity-25 w-50 object-fit-container position-absolute top-50 start-50 translate-middle">
                        
                     {% endif %}
                     
@@ -156,12 +180,71 @@
     </div>
 
     {% if products|length > 8 %}
+    
     <div class="text-center mt-5">
         <button id="btn-load-more" class="btn btn-white border shadow-sm px-5 py-2 rounded-pill text-muted hover-primary">
             Xem thêm {{ products|length - 8 }} lô hàng nữa <i class="fas fa-arrow-down ms-2"></i>
         </button>
     </div>
     {% endif %}
+
+    <div class="container py-5 mt-5">
+        <div class="text-center mb-5 animate__animated animate__fadeInUp">
+            <h6 class="text-lemon text-uppercase fw-bold letter-spacing-1">Quy trình AgriChain</h6>
+            <h2 class="fw-bold text-dark display-6">Hành trình từ Nông trại đến Bàn ăn</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Dữ liệu được ghi nhận theo thời gian thực và lưu trữ vĩnh viễn trên Blockchain, đảm bảo không ai có thể can thiệp sửa đổi.
+            </p>
+        </div>
+
+        <div class="row g-4 position-relative">
+            <div class="d-none d-lg-block position-absolute top-50 start-0 w-100 translate-middle-y border-top border-2 border-dashed border-success opacity-25" style="z-index: 0;"></div>
+
+            <div class="col-lg-3 col-md-6 position-relative" style="z-index: 1;">
+                <div class="glass-box bg-white text-center p-4 h-100 border-0 shadow-sm hover-scale group-hover-effect">
+                    <div class="rounded-circle bg-lemon-light mx-auto mb-4 d-flex align-items-center justify-content-center" 
+                        style="width: 80px; height: 80px; background: rgba(6, 95, 70, 0.1);">
+                        <i class="fas fa-seedling fa-2x text-lemon"></i>
+                    </div>
+                    <h5 class="fw-bold">1. Canh Tác</h5>
+                    <p class="small text-muted mb-0">Nông dân ghi nhật ký chăm sóc, bón phân, tưới tiêu. Dữ liệu được ký số xác thực.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 position-relative" style="z-index: 1;">
+                <div class="glass-box bg-white text-center p-4 h-100 border-0 shadow-sm hover-scale group-hover-effect">
+                    <div class="rounded-circle bg-lemon-light mx-auto mb-4 d-flex align-items-center justify-content-center" 
+                        style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1);">
+                        <i class="fas fa-cubes fa-2x text-accent"></i>
+                    </div>
+                    <h5 class="fw-bold">2. Blockchain hoá</h5>
+                    <p class="small text-muted mb-0">Thông tin thu hoạch được đóng gói thành các Block, mã hoá và đẩy lên chuỗi khối.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 position-relative" style="z-index: 1;">
+                <div class="glass-box bg-white text-center p-4 h-100 border-0 shadow-sm hover-scale group-hover-effect">
+                    <div class="rounded-circle bg-lemon-light mx-auto mb-4 d-flex align-items-center justify-content-center" 
+                        style="width: 80px; height: 80px; background: rgba(245, 158, 11, 0.1);">
+                        <i class="fas fa-truck-loading fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="fw-bold">3. Phân Phối</h5>
+                    <p class="small text-muted mb-0">Cập nhật trạng thái vận chuyển, kho bãi. Đảm bảo quy trình bảo quản đúng chuẩn.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 position-relative" style="z-index: 1;">
+                <div class="glass-box bg-white text-center p-4 h-100 border-0 shadow-sm hover-scale group-hover-effect">
+                    <div class="rounded-circle bg-lemon-light mx-auto mb-4 d-flex align-items-center justify-content-center" 
+                        style="width: 80px; height: 80px; background: rgba(59, 130, 246, 0.1);">
+                        <i class="fas fa-qrcode fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold">4. Truy Xuất</h5>
+                    <p class="small text-muted mb-0">Người tiêu dùng quét QR Code để xem lại toàn bộ lịch sử minh bạch 100%.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="mt-5 pt-5">
         <div class="glass-box p-0 overflow-hidden shadow-lg border-0">

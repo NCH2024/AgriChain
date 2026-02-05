@@ -1,5 +1,6 @@
+from datetime import datetime
 from functools import wraps
-from flask import request, session, redirect, url_for, jsonify
+from flask import app, request, session, redirect, url_for, jsonify
 from eth_account.messages import encode_defunct
 from eth_account import Account
 import secrets
@@ -58,8 +59,10 @@ def register_wallet_routes(app, db):
             return jsonify({"ok": True, "need_register": True})
 
         # Registered -> set session wallet + role
+        # Nếu ví đã được đăng ký trước đó
         session["wallet"] = address
         session["role"] = user.get("role", "farmer")
+        session["username"] = user.get("username", "Người dùng ẩn danh") # Lấy tên từ DB nạp vào Session
         session.pop("wallet_pending", None)
         return jsonify({"ok": True, "need_register": False, "role": session["role"]})
 
@@ -67,21 +70,32 @@ def register_wallet_routes(app, db):
     def api_register_role():
         data = request.get_json(force=True) or {}
         role = (data.get("role") or "").strip().lower()
+        username = (data.get("username") or "").strip() # Lấy username từ request
+
         if role not in ("farmer", "factory"):
-            return jsonify({"ok": False, "error": "Invalid role"}), 400
+            return jsonify({"ok": False, "error": "Vai trò không hợp lệ"}), 400
+        if not username:
+            return jsonify({"ok": False, "error": "Tên người dùng không được để trống"}), 400
 
         address = session.get("wallet_pending")
         if not address:
-            return jsonify({"ok": False, "error": "No pending wallet. Please login again."}), 400
+            return jsonify({"ok": False, "error": "Phiên làm việc hết hạn. Hãy đăng nhập lại."}), 400
 
+        # Lưu cả wallet, role và username vào database
         db.db[USERS_COL].update_one(
             {"wallet": address.lower()},
-            {"$set": {"wallet": address.lower(), "role": role}},
+            {"$set": {
+                "wallet": address.lower(), 
+                "role": role, 
+                "username": username,
+                "created_at": datetime.now() # Thêm ngày tham gia cho Profile
+            }},
             upsert=True
         )
 
         session["wallet"] = address
         session["role"] = role
+        session["username"] = username # Lưu vào session để dùng toàn trang
         session.pop("wallet_pending", None)
 
         return jsonify({"ok": True, "role": role})

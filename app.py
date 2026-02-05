@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, send_file
+from flask import Flask, jsonify, render_template, request, session, redirect, url_for, send_file
 from database import DatabaseManager
 from wallet_auth import register_wallet_routes, require_wallet
 from config import CRONOS_TESTNET_EXPLORER
@@ -51,14 +51,18 @@ def api_login_wallet():
     data = request.get_json(force=True)
     wallet_address = data.get('wallet')
     
-    if not wallet_address:
-        return {"ok": False, "error": "Địa chỉ ví không hợp lệ"}, 400
+    # [THÊM LOGIC KIỂM TRA Ở ĐÂY]
+    # Tìm xem ví này đã có tài khoản (người dùng) trong DB chưa
+    user = db.db.users.find_one({"wallet": wallet_address})
     
+    if not user:
+        # Nếu không tìm thấy ví trong DB, báo lỗi không cho vào
+        return {"ok": False, "error": "Tài khoản không tồn tại. Vui lòng đăng ký!"}, 404
+
     session['wallet'] = wallet_address
-    if 'role' not in session:
-        session['role'] = 'farmer' 
+    session['role'] = user.get('role', 'farmer')
+    session['username'] = user.get('username')
     
-    print(f"✅ Đã đăng nhập ví: {wallet_address}")
     return {"ok": True}
 
 @app.route('/logout')
@@ -348,6 +352,35 @@ def index():
                            ket_qua=ket_qua_tra_cuu, 
                            products=products, 
                            slideshow_images=slideshow_images)
+    
+@app.route('/profile')
+def profile():
+    # 1. Kiểm tra xem người dùng đã đăng nhập (kết nối ví) chưa
+    if 'wallet' not in session:
+        return redirect(url_for('login'))
+    
+    # 2. Lấy thông tin người dùng từ MongoDB
+    # Chúng ta tìm theo username đã lưu trong session lúc đăng nhập
+    user_data = db.db.users.find_one({"username": session.get('username')})
+    
+    # 3. Tính toán số lượng giao dịch của ví này để hiển thị cho oai
+    tx_count = db.db.user_txs.count_documents({"wallet": session.get('wallet')})
+    
+    return render_template('profile.html', user=user_data, tx_count=tx_count)
+
+@app.route('/api/delete_account', methods=['POST'])
+def delete_account():
+    if 'username' not in session:
+        return jsonify({"ok": False, "msg": "Bạn chưa đăng nhập!"})
+    
+    username = session['username']
+    
+    # Gọi hàm xoá từ DatabaseManager
+    if db.xoa_tai_khoan(username):
+        session.clear() # Xoá sạch phiên đăng nhập
+        return jsonify({"ok": True, "msg": "Tài khoản của bạn đã được xoá thành công."})
+    else:
+        return jsonify({"ok": False, "msg": "Có lỗi xảy ra khi xoá tài khoản."})
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5000)

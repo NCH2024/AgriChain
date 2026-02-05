@@ -68,3 +68,13 @@ class DatabaseManager:
         if record:
             return record.get("image_id")
         return None
+
+    def xoa_tai_khoan(self, username):
+        """Xoá tài khoản người dùng khỏi bộ sưu tập users trên MongoDB"""
+        try:
+            # Tìm và xoá bản ghi có username khớp
+            result = self.db.users.delete_one({"username": username})
+            return result.deleted_count > 0
+        except Exception as e:
+            print(f"Lỗi khi xoá tài khoản: {e}")
+            return False

@@ -2,6 +2,7 @@
 
 {% block title %}Đăng nhập hệ thống{% endblock %}
 
+
 {% block content %}
 <div class="container d-flex align-items-center justify-content-center" style="min-height: 70vh;">
     <div class="glass-box p-5 text-center shadow-lg animate__animated animate__zoomIn" style="max-width: 500px; width: 100%; border-top: 5px solid var(--primary-color);">
@@ -17,13 +18,34 @@
             Sử dụng MetaMask hoặc các ví tương thích để xác thực danh tính. <br>Hệ thống không lưu private key của bạn.
         </p>
 
-        <div class="d-grid gap-3">
+        <div class="d-grid gap-3" id="login-container">
             <button id="btn-connect" class="btn btn-lemon btn-lg rounded-pill shadow-sm" onclick="connectWallet()">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" width="24" class="me-2">
                 Kết nối MetaMask
             </button>
-            <div id="status" class="text-danger small fst-italic mt-2 fw-bold"></div>
         </div>
+
+       <div id="register-container" class="d-none animate__animated animate__fadeIn">
+            <h5 class="fw-bold mb-3 text-primary">Hoàn tất đăng ký</h5>
+            
+            <div class="mb-4 text-start">
+                <label class="small fw-bold text-muted mb-2">Tên hiển thị của bạn:</label>
+                <input type="text" id="reg-username" class="form-control rounded-pill px-4" 
+                    placeholder="Ví dụ: Hiệp Nông Dân, Nhà Máy ABC...">
+            </div>
+
+            <p class="small text-muted mb-3">Chọn vai trò của bạn trong hệ thống:</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-outline-success rounded-pill px-4" onclick="completeRegister('farmer')">
+                    <i class="fas fa-seedling me-2"></i>Nhà Nông
+                </button>
+                <button class="btn btn-outline-primary rounded-pill px-4" onclick="completeRegister('factory')">
+                    <i class="fas fa-industry me-2"></i>Nhà Máy
+                </button>
+            </div>
+        </div>
+
+        <div id="status" class="text-danger small fst-italic mt-3 fw-bold"></div>
         
         <div class="mt-5 pt-3 border-top">
             <a href="/" class="text-muted small text-decoration-none fw-bold hover-primary">
@@ -38,42 +60,75 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
     async function connectWallet() {
-        const status = document.getElementById("status");
-        status.innerText = "Đang mở ví...";
-        status.className = "text-primary small fst-italic mt-2 fw-bold";
-        
-        if (!window.ethereum) {
-            status.innerText = "Lỗi: Chưa cài MetaMask!";
-            status.className = "text-danger small fst-italic mt-2 fw-bold";
-            return;
-        }
-
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            const address = await signer.getAddress();
-            
-            status.innerText = "Đang xác thực...";
-            
-            const res = await fetch("/api/login_wallet", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ wallet: address })
-            });
-            const data = await res.json();
-            
-            if (data.ok) {
-                window.location.href = "/dashboard";
-            } else {
-                status.innerText = "Lỗi Server: " + data.error;
-                status.className = "text-danger small fst-italic mt-2 fw-bold";
-            }
-        } catch (err) {
-            console.error(err);
-            status.innerText = "Đã huỷ kết nối.";
-            status.className = "text-danger small fst-italic mt-2 fw-bold";
-        }
+    const status = document.getElementById("status");
+    if (!window.ethereum) {
+        status.innerText = "Lỗi: Hãy cài MetaMask!";
+        return;
     }
+
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+
+        // 1. Lấy mã Nonce từ Server để ký
+        const nonceRes = await fetch("/api/nonce");
+        const { message } = await nonceRes.json();
+
+        // 2. Yêu cầu ví ký bản tin
+        const signature = await signer.signMessage(message);
+
+        // 3. Gửi chữ ký lên xác thực
+        const verifyRes = await fetch("/api/verify", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ address, signature })
+        });
+        const data = await verifyRes.json();
+
+        if (data.ok) {
+            if (data.need_register) {
+                // HIỆN FORM CHỌN VAI TRÒ ĐỂ ĐĂNG KÝ
+                document.getElementById('login-container').classList.add('d-none');
+                document.getElementById('register-container').classList.remove('d-none');
+                status.innerText = "Ví mới! Vui lòng chọn vai trò để đăng ký.";
+                status.className = "text-success small fst-italic mt-3 fw-bold";
+            } else {
+                window.location.href = "/dashboard";
+            }
+        } else {
+            status.innerText = "Lỗi: " + data.error;
+        }
+    } catch (err) {
+        status.innerText = "Đã hủy hoặc gặp lỗi.";
+    }
+}
+
+// Hàm hoàn tất đăng ký vai trò
+async function completeRegister(role) {
+    const username = document.getElementById('reg-username').value.trim();
+    
+    if (!username) {
+        Swal.fire('Chú ý', 'Vui lòng nhập tên hiển thị của bạn!', 'warning');
+        return;
+    }
+
+    const res = await fetch("/api/register_role", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ 
+            role: role,
+            username: username // Gửi thêm tên người dùng lên Server
+        })
+    });
+    const data = await res.json();
+    if (data.ok) {
+        Swal.fire('Thành công!', `Chào mừng ${username} gia nhập AgriChain`, 'success')
+        .then(() => window.location.href = "/dashboard");
+    } else {
+        Swal.fire('Lỗi', data.error, 'error');
+    }
+}
 </script>
 {% endblock %}

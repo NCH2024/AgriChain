@@ -32,7 +32,7 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: "https://evm-t3.cronos.org",
-      accounts: ["338e8da0a17ab973746addb3f42894da5937f5d009a949aae5bde681aa8e07e0"],
+      accounts: ["ab282bc97ae0af877f9113c089667be52ecd906dbad435f705ed97aac1013110"],
     },
   },
 });

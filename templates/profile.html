@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Hồ sơ ví - AgriChain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="glass-box p-5 border-0 shadow-lg animate__animated animate__fadeIn" 
+                 style="background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,253,250,0.9) 100%);">
+                
+                <div class="text-center mb-5">
+                    <div class="position-relative d-inline-block">
+                        <div class="rounded-circle bg-lemon text-white d-flex align-items-center justify-content-center shadow-lg" 
+                             style="width: 120px; height: 120px; font-size: 3rem; ">
+                            <i class="fas fa-user-tie" style="color: #065f46;"></i>
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-4 border-white p-2">
+                            <span class="visually-hidden">Online</span>
+                        </span>
+                    </div>
+                    <h3 class="fw-bold mt-4 mb-1">{{ session.get('username', 'N/A') }}</h3>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+                        <i class="fas fa-check-circle me-1"></i> Tài khoản đã xác thực
+                    </span>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="p-4 rounded-4 border bg-white shadow-sm h-100">
+                            <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Địa chỉ ví (Wallet)</label>
+                            <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-3">
+                                <code class="text-primary fw-bold text-truncate me-2">{{ session.get('wallet') }}</code>
+                                <button class="btn btn-sm btn-outline-secondary border-0" onclick="copyWallet()">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-4 rounded-4 border bg-white shadow-sm h-100">
+                            <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Vai trò hệ thống</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                                    <i class="fas fa-id-badge fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-capitalize">{{ session.get('role', 'Farmer') }}</h5>
+                                    <small class="text-muted">Quyền quản trị sản xuất</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="p-4 rounded-4 border bg-white shadow-sm">
+                            <h6 class="fw-bold mb-4"><i class="fas fa-info-circle me-2 text-lemon"></i>Chi tiết tài khoản</h6>
+                            <div class="row gy-3">
+                                <div class="col-sm-6 d-flex justify-content-between border-bottom pb-2">
+                                    <span class="text-muted">Ngày tham gia:</span>
+                                    <span class="fw-bold text-dark">{{ user.created_at.strftime('%d/%m/%Y') if user and user.created_at else 'N/A' }}</span>
+                                </div>
+                                <div class="col-sm-6 d-flex justify-content-between border-bottom pb-2 ms-lg-auto">
+                                    <span class="text-muted">Tổng giao dịch:</span>
+                                    <span class="badge bg-primary rounded-pill px-3">{{ tx_count }} Block</span>
+                                </div>
+                                <div class="col-sm-6 d-flex justify-content-between border-bottom pb-2">
+                                    <span class="text-muted">Trạng thái mạng:</span>
+                                    <span class="text-success fw-bold"><i class="fas fa-link me-1"></i> Cronos Testnet</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <a href="/dashboard" class="btn btn-lemon rounded-pill px-5 py-2 shadow-sm">
+                        <i class="fas fa-tachometer-alt me-2"></i> Quay lại Dashboard
+                    </a>
+                </div>
+                <div class="mt-5 pt-4 border-top">
+                    <div class="alert alert-danger border-0 bg-danger bg-opacity-10 rounded-4 p-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <h6 class="fw-bold text-danger mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Vùng nguy hiểm</h6>
+                                <p class="small text-danger mb-0">Một khi đã xoá, bạn không thể khôi phục lại dữ liệu tài khoản này.</p>
+                            </div>
+                            <button class="btn btn-danger rounded-pill px-4" onclick="xacNhanXoa()">
+                                <i class="fas fa-user-times me-2"></i> Xoá tài khoản
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyWallet() {
+    const wallet = "{{ session.get('wallet') }}";
+    navigator.clipboard.writeText(wallet);
+    Swal.fire({
+        title: 'Đã sao chép!',
+        text: 'Địa chỉ ví đã được lưu vào bộ nhớ tạm.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+    });
+}
+function xacNhanXoa() {
+    Swal.fire({
+        title: 'Bạn có chắc chắn không?',
+        text: "Tài khoản sẽ bị xoá vĩnh viễn và bạn sẽ bị đăng xuất ngay lập tức!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Vẫn xoá nó!',
+        cancelButtonText: 'Huỷ bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/api/delete_account', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    Swal.fire('Đã xoá!', data.msg, 'success')
+                    .then(() => window.location.href = '/');
+                } else {
+                    Swal.fire('Lỗi!', data.msg, 'error');
+                }
+            });
+        }
+    })
+}
+</script>
+{% endblock %}

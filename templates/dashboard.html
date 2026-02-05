@@ -12,7 +12,7 @@
                 <i class="fas fa-user-astronaut fa-2x text-lemon"></i>
             </div>
             <div>
-                <h4 class="fw-bold mb-1">Xin chào, <span class="text-lemon">{{ wallet[:6] }}...{{ wallet[-4:] }}</span></h4>
+                <h4 class="fw-bold mb-1">Xin chào, <span class="text-lemon">{{ session.get('username', 'Người dùng ẩn danh') }}</span></h4>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
                         <i class="fas fa-wifi me-1" style="font-size: 0.7em;"></i> Online
@@ -54,11 +54,16 @@
                         <form onsubmit="return false;">
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Mã Lô Hàng</label>
-                                <input type="text" id="create_batch" class="form-control" placeholder="VD: RAU_001" required>
+                                <input type="text" id="create_batch" class="form-control" 
+                                        placeholder="VD: RAU001" required 
+                                        pattern="^(?=.*[0-9])[A-Z0-9]{7,}$"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        title="Mã lô phải trên 6 ký tự, gồm chữ IN HOA và ít nhất một chữ số.">
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Tên Nông Sản</label>
-                                <input type="text" id="create_product" class="form-control" placeholder="VD: Cải Bắp" required>
+                                <input type="text" id="create_product" class="form-control" 
+                                         placeholder="VD: Cải Bắp" required>
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Hành động</label>
@@ -66,7 +71,9 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Ghi chú</label>
-                                <textarea id="create_details" class="form-control" rows="3" placeholder="Mô tả quy trình..."></textarea>
+                                <textarea id="create_details" class="form-control" rows="3" 
+                                            placeholder="Mô tả quy trình (25 - 255 ký tự)..." 
+                                            required minlength="25" maxlength="255"></textarea>
                             </div>
                             <div class="mb-4">
                                 <label class="text-muted small fw-bold mb-1">Hình ảnh</label>
@@ -83,11 +90,15 @@
                         <form onsubmit="return false;">
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Mã Lô Hàng</label>
-                                <input type="text" id="update_batch" class="form-control" placeholder="Nhập mã lô cần cập nhật..." required>
+                                <input type="text" id="update_batch" class="form-control" 
+                                    placeholder="Nhập mã lô cần cập nhật..." required 
+                                    oninput="tuDongDienTen()" 
+                                    style="text-transform: uppercase;">
                             </div>
                             <div class="mb-3">
-                                <label class="text-muted small fw-bold mb-1">Tên Nông Sản (Tuỳ chọn)</label>
-                                <input type="text" id="update_product" class="form-control" placeholder="Để trống nếu không đổi">
+                                <label class="text-muted small fw-bold mb-1">Tên Nông Sản</label>
+                                <input type="text" id="update_product" class="form-control" 
+                                    placeholder="Sẽ tự hiện khi nhập đúng mã lô..." readonly>
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Hoạt động tiếp theo</label>
@@ -109,7 +120,9 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold mb-1">Chi tiết hoạt động</label>
-                                <textarea id="update_details" class="form-control" rows="3"></textarea>
+                                <textarea id="update_details" class="form-control" rows="3" 
+                                    placeholder="Mô tả quy trình (25 - 255 ký tự)..." 
+                                    required minlength="25" maxlength="255"></textarea>
                             </div>
                             <div class="mb-4">
                                 <label class="text-muted small fw-bold mb-1">Minh chứng hình ảnh</label>
@@ -139,20 +152,28 @@
                 </div>
             </div>
 
-            <div class="glass-box shadow-lg border-0 animate__animated animate__fadeInRight animate__delay-1s">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-lemon"></i>Nhật ký hoạt động</h5>
-                    <div class="d-flex gap-2">
-                        <button onclick="kiemTraHack()" class="btn btn-white border text-danger btn-sm fw-bold shadow-sm hover-scale">
-                            <i class="fas fa-shield-alt me-1"></i> Scan
-                        </button>
-                        <button onclick="location.reload()" class="btn btn-sm btn-white border shadow-sm hover-scale">
-                            <i class="fas fa-sync text-primary"></i>
-                        </button>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-lemon"></i>Nhật ký hoạt động</h5>
+                
+                <div class="d-flex gap-2 align-items-center">
+                    <select id="rowsLimit" class="form-select form-select-sm shadow-sm border-0 bg-light fw-bold text-muted" 
+                            style="width: 130px; cursor: pointer;" onchange="thayDoiGioiHan()">
+                        <option value="5">Xem 5 dòng</option>
+                        <option value="10">Xem 10 dòng</option>
+                        <option value="20">Xem 20 dòng</option>
+                        <option value="all">Xem tất cả</option>
+                    </select>
 
-                <div class="table-responsive rounded-4 border bg-white">
+                    <button onclick="kiemTraHack()" class="btn btn-white border text-danger btn-sm fw-bold shadow-sm hover-scale">
+                        <i class="fas fa-shield-alt me-1"></i> Scan
+                    </button>
+                    <button onclick="location.reload()" class="btn btn-sm btn-white border shadow-sm hover-scale">
+                        <i class="fas fa-sync text-primary"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="position-relative"> <div class="table-responsive rounded-4 border bg-white" style="min-height: 200px;">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="bg-light">
                             <tr class="text-muted small text-uppercase fw-bold">
@@ -163,33 +184,17 @@
                                 <th class="text-end pe-4">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% if products %}
-                                {% for item in products %}
-                                <tr>
-                                    <td class="fw-bold text-primary ps-4">{{ item.batch_code }}</td>
-                                    <td class="fw-bold">{{ item.product_type }}</td>
-                                    <td>
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
-                                            {{ item.action }}
-                                        </span>
-                                    </td>
-                                    <td class="small text-muted">{{ item.timestamp_fmt }}</td>
-                                    <td class="text-end pe-4">
-                                        <a href="/products/{{ item.batch_code }}" class="btn btn-sm btn-outline-primary rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="/generate_qr/{{ item.batch_code }}" target="_blank" class="btn btn-sm btn-outline-dark rounded-circle ms-1 shadow-sm" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
-                                            <i class="fas fa-qrcode"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr><td colspan="5" class="text-center text-muted py-5">Chưa có dữ liệu</td></tr>
-                            {% endif %}
-                        </tbody>
+                        <tbody id="activityTableBody">
+                            </tbody>
                     </table>
+                </div>
+
+                <div id="loadMoreContainer" class="text-center pt-5 pb-3 w-100" 
+                    style="display: none; position: absolute; bottom: 0; left: 0; z-index: 10; 
+                            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 40%);">
+                    <button onclick="xemThem()" class="btn btn-white shadow-sm border rounded-pill px-4 fw-bold hover-scale text-primary">
+                        <i class="fas fa-chevron-down me-1"></i> Xem thêm 10 dòng
+                    </button>
                 </div>
             </div>
         </div>
@@ -217,40 +222,119 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // Config Chart màu Bio-Tech
+    // --- 1. CONFIG BIỂU ĐỒ & DỮ LIỆU ---
     const labels = {{ chart_labels | tojson }};
     const data = {{ chart_data | tojson }};
-    if (labels.length > 0) {
+    if (labels && labels.length > 0) {
         new Chart(document.getElementById('myChart'), {
             type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
                     data: data,
-                    // Bảng màu: Xanh Ngọc, Xanh Rừng, Vàng Đất, Xanh Dương, Tím Nhạt
                     backgroundColor: ['#10b981', '#065f46', '#f59e0b', '#3b82f6', '#8b5cf6'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                    legend: { position: 'right', labels: { color: '#334155', font: {family: 'Plus Jakarta Sans'} } } 
-                },
-                cutout: '75%'
-            }
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } }
         });
     }
 
-    // Logic Blockchain (Giữ nguyên)
+    // --- 2. LOGIC TỰ ĐỘNG ĐIỀN & XEM THÊM ---
+    const danhSachHangHoa = {};
+    const tatCaNhatKy = {{ products | tojson }}; // Dữ liệu phân trang
+    let soLuongHienThi = 5;
+    let buocNhay = 10;
+
+    // Nạp dữ liệu từ Server an toàn
+    try {
+        {% if products %}
+            {% for p in products %}
+                var rawCode = {{ p.batch_code | tojson }};
+                var rawName = {{ p.product_type | tojson }};
+                if (rawCode) danhSachHangHoa[rawCode.toUpperCase().trim()] = rawName || "";
+            {% endfor %}
+        {% endif %}
+    } catch (err) { console.error("Lỗi data:", err); }
+
+    // Chạy khi load trang
+    document.addEventListener('DOMContentLoaded', function() {
+        renderBang();
+    });
+
+    // Hàm tự điền tên sản phẩm
+    function tuDongDienTen() {
+        const oMaLo = document.getElementById('update_batch');
+        const oTenSP = document.getElementById('update_product');
+        if (!oMaLo || !oTenSP) return;
+
+        const maLoInput = oMaLo.value.toUpperCase().trim();
+        
+        // Logic tìm kiếm
+        if (danhSachHangHoa.hasOwnProperty(maLoInput)) {
+            oTenSP.value = danhSachHangHoa[maLoInput];
+            oTenSP.readOnly = true; 
+            oTenSP.classList.replace("bg-white", "bg-light");
+            oTenSP.classList.replace("text-muted", "text-success");
+            oTenSP.classList.add("fw-bold");
+        } else {
+            if (oTenSP.readOnly) {
+                oTenSP.value = "";
+                oTenSP.readOnly = false;
+                oTenSP.placeholder = "Mã mới? Nhập tên sản phẩm...";
+                oTenSP.classList.replace("bg-light", "bg-white");
+                oTenSP.classList.replace("text-success", "text-muted");
+                oTenSP.classList.remove("fw-bold");
+            }
+        }
+    }
+
+    // Các hàm phân trang
+    function thayDoiGioiHan() {
+        const val = document.getElementById('rowsLimit').value;
+        soLuongHienThi = (val === 'all') ? tatCaNhatKy.length : parseInt(val);
+        renderBang();
+    }
+    function xemThem() { soLuongHienThi += buocNhay; renderBang(); }
+    
+    function renderBang() {
+        const tbody = document.getElementById('activityTableBody');
+        const loadMoreBtn = document.getElementById('loadMoreContainer');
+        if (!tbody) return;
+
+        if (!tatCaNhatKy || tatCaNhatKy.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">Chưa có dữ liệu</td></tr>`;
+            if(loadMoreBtn) loadMoreBtn.style.display = 'none';
+            return;
+        }
+
+        const duLieuCanVe = tatCaNhatKy.slice(0, soLuongHienThi);
+        let html = '';
+        duLieuCanVe.forEach(item => {
+            html += `
+            <tr>
+                <td class="fw-bold text-primary ps-4">${item.batch_code || 'N/A'}</td>
+                <td class="fw-bold">${item.product_type || 'N/A'}</td>
+                <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">${item.action || ''}</span></td>
+                <td class="small text-muted">${item.timestamp_fmt || ''}</td>
+                <td class="text-end pe-4">
+                    <a href="/products/${item.batch_code}" class="btn btn-sm btn-outline-primary rounded-circle shadow-sm" style="width: 32px; height: 32px; padding:0; line-height:30px;"><i class="fas fa-eye"></i></a>
+                    <a href="/generate_qr/${item.batch_code}" target="_blank" class="btn btn-sm btn-outline-dark rounded-circle ms-1 shadow-sm" style="width: 32px; height: 32px; padding:0; line-height:30px;"><i class="fas fa-qrcode"></i></a>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+        if(loadMoreBtn) loadMoreBtn.style.display = (soLuongHienThi < tatCaNhatKy.length) ? 'block' : 'none';
+    }
+
+    // --- 3. BLOCKCHAIN & XỬ LÝ FORM (CÓ KIỂM TRA DỮ LIỆU) ---
     const CONTRACT_ADDRESS = "{{ contract_address }}";
     const CONTRACT_ABI = {{ contract_abi | tojson }};
     const EXPLORER_BASE = "{{ explorer_base }}";
 
     async function getContractAndWallet() {
-        if (!window.ethereum) throw new Error('No MetaMask');
+        if (!window.ethereum) throw new Error('Cần cài đặt ví MetaMask');
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
         const signer = provider.getSigner();
@@ -267,10 +351,11 @@
         fd.append("batch_code", batch_code);
         fd.append("action", action);
         fd.append("tx_hash", tx_hash);
-
-        const res = await fetch("/api/upload_image", { method: "POST", body: fd });
-        const data = await res.json();
-        return data.ok ? data.image_id : null;
+        try {
+            const res = await fetch("/api/upload_image", { method: "POST", body: fd });
+            const data = await res.json();
+            return data.ok ? data.image_id : null;
+        } catch (e) { return null; }
     }
 
     async function saveTx(wallet, batch_code, tx_hash, action, image_id) {
@@ -281,17 +366,45 @@
         });
     }
 
+    // [QUAN TRỌNG] Hàm kiểm tra hợp lệ
+    function checkValid(element, fieldName) {
+        if (!element.checkValidity()) {
+            // Lấy thông báo lỗi từ trình duyệt hoặc tự định nghĩa
+            let msg = element.validationMessage;
+            // Tùy chỉnh thông báo cho thân thiện hơn
+            if (element.validity.patternMismatch) msg = `${fieldName} không đúng định dạng (Yêu cầu: IN HOA, >6 ký tự, có số).`;
+            if (element.validity.tooShort) msg = `${fieldName} quá ngắn (Tối thiểu ${element.minLength} ký tự).`;
+            if (element.validity.valueMissing) msg = `Vui lòng nhập ${fieldName}.`;
+            
+            Swal.fire('Dữ liệu không hợp lệ', msg, 'warning');
+            element.focus(); // Đưa con trỏ về ô lỗi
+            return false;
+        }
+        return true;
+    }
+
+    // --- HÀM TẠO MỚI (Đã thêm chốt chặn) ---
     async function createBatch() {
         try {
-            const batch = document.getElementById('create_batch').value;
-            const product = document.getElementById('create_product').value;
-            const action = document.getElementById('create_action').value;
-            const details = document.getElementById('create_details').value;
+            // 1. Lấy thẻ input
+            const batchInput = document.getElementById('create_batch');
+            const productInput = document.getElementById('create_product');
+            const detailsInput = document.getElementById('create_details');
             
-            if(!batch || !product) return Swal.fire('Lỗi', 'Thiếu thông tin!', 'error');
+            // 2. [CHỐT CHẶN] Kiểm tra Validation HTML5 trước khi chạy tiếp
+            if (!checkValid(batchInput, "Mã lô hàng")) return;
+            if (!checkValid(productInput, "Tên nông sản")) return;
+            if (!checkValid(detailsInput, "Ghi chú")) return;
 
+            // 3. Lấy giá trị
+            const batch = batchInput.value.toUpperCase().trim();
+            const product = productInput.value;
+            const action = document.getElementById('create_action').value;
+            const details = detailsInput.value;
+
+            // 4. Gọi Blockchain
             const { wallet, contract } = await getContractAndWallet();
-            Swal.showLoading();
+            Swal.fire({ title: 'Đang gửi giao dịch...', didOpen: () => Swal.showLoading() });
             
             const tx = await contract.themNhatKy(batch, product, action, details || '');
             const imgId = await uploadImageFromInput('create_image', batch, action, tx.hash);
@@ -299,22 +412,35 @@
             
             Swal.fire('Thành công', 'Đã tạo lô hàng mới!', 'success').then(() => location.reload());
         } catch (e) {
-            Swal.fire('Lỗi', e.message, 'error');
+            Swal.fire('Lỗi', e.message || e.toString(), 'error');
         }
     }
 
+    // --- HÀM CẬP NHẬT (Đã thêm chốt chặn) ---
     async function updateBatch() {
         try {
-            const batch = document.getElementById('update_batch').value;
-            const action = document.getElementById('update_action').value;
-            const details = document.getElementById('update_details').value;
-            let product = document.getElementById('update_product').value;
-            
-            if(!batch) return Swal.fire('Lỗi', 'Chưa nhập mã lô!', 'error');
-            if (!product) product = "N/A";
+            // 1. Lấy thẻ input
+            const batchInput = document.getElementById('update_batch');
+            const productInput = document.getElementById('update_product');
+            const detailsInput = document.getElementById('update_details');
 
+            // 2. [CHỐT CHẶN] Kiểm tra Validation
+            if (!checkValid(batchInput, "Mã lô hàng")) return;
+            // Kiểm tra kỹ tên sản phẩm (kể cả khi readonly)
+            if (!productInput.value || productInput.value.trim() === "") {
+                return Swal.fire('Thiếu thông tin', 'Vui lòng nhập hoặc kiểm tra lại tên sản phẩm!', 'warning');
+            }
+            if (!checkValid(detailsInput, "Chi tiết hoạt động")) return;
+
+            // 3. Lấy giá trị
+            const batch = batchInput.value.toUpperCase().trim();
+            const action = document.getElementById('update_action').value;
+            const details = detailsInput.value;
+            const product = productInput.value;
+
+            // 4. Gọi Blockchain
             const { wallet, contract } = await getContractAndWallet();
-            Swal.showLoading();
+            Swal.fire({ title: 'Đang cập nhật...', didOpen: () => Swal.showLoading() });
 
             const tx = await contract.themNhatKy(batch, product, action, details || '');
             const imgId = await uploadImageFromInput('update_image', batch, action, tx.hash);
@@ -322,20 +448,13 @@
 
             Swal.fire('Thành công', 'Đã cập nhật trạng thái!', 'success').then(() => location.reload());
         } catch (e) {
-            Swal.fire('Lỗi', e.message, 'error');
+            Swal.fire('Lỗi', e.message || e.toString(), 'error');
         }
     }
     
     function kiemTraHack() {
-        Swal.fire({
-            title: 'Đang quét hệ thống...',
-            html: 'Kiểm tra tính toàn vẹn của chuỗi khối...',
-            timer: 2000,
-            timerProgressBar: true,
-            didOpen: () => { Swal.showLoading() }
-        }).then(() => {
-            Swal.fire('An toàn', 'Hệ thống AgriChain hoạt động bình thường. Không phát hiện xâm nhập.', 'success');
-        });
+        Swal.fire({ title: 'Đang quét hệ thống...', timer: 2000, didOpen: () => Swal.showLoading() })
+            .then(() => Swal.fire('An toàn', 'Hệ thống hoạt động bình thường.', 'success'));
     }
 </script>
 {% endblock %}

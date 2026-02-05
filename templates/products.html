@@ -23,9 +23,7 @@
                     {% if p.image_id %}
                         <img src="/image/{{ p.image_id }}" class="w-100 h-100 object-fit-cover transition-transform">
                     {% else %}
-                        <div class="w-100 h-100 d-flex align-items-center justify-content-center">
-                            <i class="fas fa-leaf fa-3x text-muted opacity-25"></i>
-                        </div>
+                        <img src="/static/image/blockchain.gif" class="opacity-25 w-75 h-75 object-fit-container position-absolute top-50 start-50 translate-middle">
                     {% endif %}
                     
                     <span class="position-absolute top-0 start-0 m-3 badge bg-white text-primary border shadow-sm">

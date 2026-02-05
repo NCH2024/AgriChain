@@ -21,7 +21,7 @@
     --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 
                     0 2px 4px -1px rgba(0, 0, 0, 0.03);
     
-    --radius-box: 20px; /* Giảm bo góc chút cho gọn */
+    --radius-box: 20px;
     --radius-btn: 10px;
 }
 
@@ -32,50 +32,31 @@ body {
     color: var(--text-body);
     font-family: 'Plus Jakarta Sans', sans-serif;
     min-height: 100vh;
-    line-height: 1.5; /* Giảm khoảng cách dòng chút cho gọn */
-    font-size: 0.925rem; /* Base size ~14.8px (Chuẩn Dashboard) */
+    line-height: 1.5;
+    font-size: 0.925rem;
     -webkit-font-smoothing: antialiased;
 }
 
-/* --- Typography (Giới hạn kích thước tiêu đề) --- */
+/* --- Typography --- */
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-main);
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-bottom: 0.5rem;
 }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
 
-h1 { font-size: 2rem; }       /* ~32px */
-h2 { font-size: 1.75rem; }    /* ~28px */
-h3 { font-size: 1.5rem; }     /* ~24px */
-h4 { font-size: 1.25rem; }    /* ~20px */
-h5 { font-size: 1.1rem; }     /* ~17.6px */
-h6 { font-size: 1rem; }       /* ~16px */
+.text-lemon { color: var(--primary-color) !important; font-weight: 700; }
+.text-muted { color: var(--text-muted) !important; }
+a { color: var(--primary-color); text-decoration: none; font-weight: 600; transition: all 0.2s ease; }
+a:hover { color: var(--accent-color); }
 
-.text-lemon {
-    color: var(--primary-color) !important;
-    font-weight: 700;
-}
-
-.text-muted {
-    color: var(--text-muted) !important;
-}
-
-.text-shadow-light {
-  text-shadow: 1px 1px 20px rgb(255, 255, 255);
-}
-
-a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-a:hover {
-    color: var(--accent-color);
-}
-
-/* --- Glass Box (Khối Kính) --- */
+/* --- Glass Box --- */
 .glass-box {
     background: var(--glass-bg);
     backdrop-filter: blur(20px) saturate(180%);
@@ -83,98 +64,49 @@ a:hover {
     border: var(--glass-border);
     border-radius: var(--radius-box);
     box-shadow: var(--glass-shadow);
-    padding: 24px; /* Giảm padding từ 32px xuống 24px */
+    padding: 24px;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
 }
-
 .glass-box:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.05);
     border-color: #fff;
 }
 
-/* --- Header --- */
-.navbar-glass {
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(241, 245, 249, 0.8);
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    padding-top: 10px; /* Giảm padding header */
-    padding-bottom: 10px;
-}
-
-.navbar-brand { font-size: 1.25rem; }
-.nav-link { 
-    color: var(--text-body) !important; 
-    font-weight: 500; 
-    font-size: 0.95rem;
-}
-.nav-link:hover { color: var(--primary-color) !important; }
-
-/* --- Footer --- */
-.footer-glass {
-    background: #fff;
-    border-top: 1px solid #e2e8f0;
-    margin-top: 60px;
-    padding: 40px 0;
-    font-size: 0.9rem;
-}
-
-/* --- Form & Input (Nhỏ gọn hơn) --- */
+/* --- Common Components --- */
 .form-control {
     background-color: #f8fafc;
     border: 1px solid #cbd5e1;
     color: var(--text-main);
     border-radius: var(--radius-btn);
-    padding: 10px 14px; /* Giảm padding input */
+    padding: 10px 14px;
     font-size: 0.9rem;
     transition: all 0.2s;
 }
-
 .form-control:focus {
     background-color: #fff;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(6, 95, 70, 0.1);
     color: var(--text-main);
 }
-.form-control::placeholder { color: #94a3b8; font-size: 0.9rem; }
 
-/* --- Buttons (Nút bấm gọn hơn) --- */
 .btn-lemon {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
     color: #fff;
     border: none;
     border-radius: var(--radius-btn);
-    padding: 10px 20px; /* Nút gọn hơn */
+    padding: 10px 20px;
     font-size: 0.9rem;
     font-weight: 600;
     box-shadow: 0 4px 6px -1px rgba(6, 95, 70, 0.2);
     transition: all 0.2s ease;
 }
-
 .btn-lemon:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.3);
     color: #fff;
 }
 
-.btn-outline-lemon {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: var(--text-main);
-    border-radius: var(--radius-btn);
-    font-weight: 600;
-    padding: 8px 18px;
-    font-size: 0.9rem;
-}
-
-.btn-outline-lemon:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: #f0fdfa;
-}
-
-/* --- Table & Badges --- */
 .table { color: var(--text-body) !important; font-size: 0.9rem; }
 .table thead th {
     background-color: transparent;
@@ -187,26 +119,184 @@ a:hover {
 }
 .table td { border-bottom: 1px solid #f1f5f9; padding: 12px 8px; }
 
-/* Badge trạng thái nhỏ xinh */
-.badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0.01em;
-}
-.bg-dark {
-    background-color: #f1f5f9 !important;
-    color: var(--text-main) !important;
-    border: none !important;
-}
-.bg-black {
-    background-color: var(--primary-color) !important;
-    color: #fff !important;
-}
-.text-white { color: var(--text-main) !important; }
+.badge { padding: 5px 10px; border-radius: 15px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.01em; }
+.bg-dark { background-color: #f1f5f9 !important; color: var(--text-main) !important; border: none !important; }
+.bg-black { background-color: var(--primary-color) !important; color: #fff !important; }
 
-/* --- Card Product Fix --- */
-.group-hover-effect .position-relative {
-    background-color: #f1f5f9;
+/* --- Dải Ruy Băng (Marquee) --- */
+.marquee-wrapper {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    height: 60px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    position: relative;
+    white-space: nowrap;
+    z-index: 10;
 }
+.marquee-content { display: flex; animation: scrolling 300s linear infinite; } /* Tốc độ chuẩn 30s */
+.marquee-content span {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0 20px;
+    letter-spacing: 5px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+}
+
+.marquee-wrapper:hover .marquee-content span {
+    color: var(--primary-color); /* Fix lỗi cú pháp thừa dấu ngoặc */
+    -webkit-text-stroke: 0px;
+    opacity: 1;
+    cursor: default;
+}
+@keyframes scrolling { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+.marquee-wrapper:hover .marquee-content { animation-play-state: paused; }
+
+/* --- Hiệu ứng Hover --- */
+.hover-scale { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.hover-scale:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* =================================================================
+   PHẦN HEADER & FOOTER MỚI (ĐÃ CÔ LẬP - KHÔNG ẢNH HƯỞNG DASHBOARD)
+   ================================================================= */
+
+/* 1. Top Bar (Thanh thông tin trên cùng) */
+.top-bar {
+    background-color: var(--primary-color);
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+.hover-warning:hover { color: #f59e0b !important; transition: 0.3s; }
+
+/* 2. Navbar Modern (Dành riêng cho Header) */
+.navbar-glass {
+    background: rgba(255, 255, 255, 0.527) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+}
+
+.navbar-brand .icon-box {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* [QUAN TRỌNG] Chỉ style nav-link KHI NÓ NẰM TRONG .navbar-glass 
+   Để không làm hỏng nav-link trong Dashboard */
+.navbar-glass .nav-link {
+    color: var(--text-main) !important;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.5rem 1.2rem !important; /* Padding riêng cho menu chính */
+    position: relative;
+}
+
+/* Hiệu ứng gạch chân (Chỉ áp dụng cho Header) */
+.navbar-glass .underline-effect::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    bottom: 5px;
+    left: 50%;
+    background-color: var(--highlight-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+.navbar-glass .underline-effect:hover::after, 
+.navbar-glass .nav-link.active::after {
+    width: 70%;
+}
+
+/* Nút user/login trong Header */
+.navbar-glass .btn-lemon-outline {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+    font-weight: 700;
+    padding: 8px 20px;
+    border-radius: 50rem;
+    transition: all 0.3s;
+}
+.navbar-glass .btn-lemon-outline:hover, 
+.navbar-glass .btn-lemon-outline.show {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(6, 95, 70, 0.2);
+}
+
+/* Hamburger Menu Icon */
+.hamburger-icon span {
+    display: block; width: 25px; height: 3px; margin: 5px auto;
+    background-color: var(--primary-color); transition: all 0.3s;
+}
+
+/* 3. Footer Modern (Dark Green Theme) */
+.footer-modern {
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%);
+    color: white;
+    margin-top: auto;
+    position: relative;
+}
+
+/* Sóng nước SVG */
+.custom-shape-divider-top {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    overflow: hidden; line-height: 0;
+    transform: translateY(-99%);
+}
+.custom-shape-divider-top svg {
+    position: relative; display: block;
+    width: calc(100% + 1.3px); height: 60px;
+}
+.custom-shape-divider-top .shape-fill { fill: #064e3b; }
+
+/* Link Footer */
+.footer-link {
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-block;
+}
+.footer-link:hover { color: var(--highlight-color); transform: translateX(5px); }
+
+/* Nút Social Footer */
+.social-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    color: white; text-decoration: none; transition: all 0.3s;
+}
+.social-btn:hover {
+    background: var(--highlight-color); color: #022c22; transform: translateY(-3px);
+}
+
+/* Input Newsletter Footer */
+.footer-modern .form-control {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+.footer-modern .form-control:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: none;
+}
+.footer-modern .placeholder-light::placeholder { color: rgba(255,255,255,0.5); }

@@ -5,57 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AgriChain - {% block title %}Hệ thống Nông nghiệp 4.0{% endblock %}</title>
     <link rel="icon" href="/static/image/block.png" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-
-    <meta property="og:title" content="AgriChain - Hệ thống Nông nghiệp 4.0">
-    <meta property="og:description" content="Hệ thống truy xuất nguồn gốc nông sản ứng dụng công nghệ Blockchain tiên tiến, đảm bảo sự minh bạch từ nông trại đến bàn ăn.">
-    <meta property="og:url" content="https://{{VERCEL_URL}}">
-    <meta property="og:image" content="https://{{VERCEL_URL}}/static/image/preview.png">
-
-    <meta property="og:type" content="website">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <nav class="navbar navbar-expand-lg navbar-light navbar-glass sticky-top">
+    <div class="top-bar py-2 text-white d-none d-lg-block">
+        <div class="container d-flex justify-content-between align-items-center small fw-bold">
+            <div class="d-flex gap-4">
+                <span><i class="fas fa-envelope me-2 text-warning"></i>chanhhiep.vn@gmail.com</span>
+                <span><i class="fas fa-phone-alt me-2 text-warning"></i>(+84) 357 379 334</span>
+            </div>
+            <div class="d-flex gap-3 opacity-75">
+                <span><i class="fas fa-clock me-1"></i> Mon - Fri: 8:00 - 17:00</span>
+                <div class="vr"></div>
+                <a href="#" class="text-white text-decoration-none hover-warning"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-white text-decoration-none hover-warning"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="text-white text-decoration-none hover-warning"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-glass sticky-top py-3">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center gap-2" href="/">
-                <i class="fas fa-leaf text-lemon fa-lg"></i> 
-                <div>
-                    <span class="text-white fw-bolder">Agri</span><span class="text-lemon">Chain</span>
+            <a class="navbar-brand fw-bold fs-3 d-flex align-items-center gap-2" href="/">
+                <div class="icon-box bg-lemon text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="lh-1">
+                    <span class="text-dark fw-bolder tracking-tight">Agri</span><span class="text-lemon">Chain</span>
+                    <div class="small text-muted fw-normal" style="font-size: 0.6rem; letter-spacing: 2px;">BLOCKCHAIN PLATFORM</div>
                 </div>
             </a>
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            
+            <button class="navbar-toggler border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <div class="hamburger-icon">
+                    <span></span><span></span><span></span>
+                </div>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-1 gap-lg-4">
-                    <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/contact">Liên hệ</a></li>
+                <ul class="navbar-nav ms-auto align-items-center gap-1 gap-lg-4 mt-3 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold position-relative underline-effect" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold position-relative underline-effect" href="/products">Sản phẩm</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold position-relative underline-effect" href="/contact">Liên hệ</a>
+                    </li>
                     
                     {% if session.get('wallet') %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle btn btn-sm btn-outline-lemon px-3 rounded-pill" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle me-1"></i> Quản lý
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle btn btn-lemon-outline px-4 py-2 rounded-pill shadow-sm" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-astronaut me-2"></i> {{ session.get('username', 'Người dùng ẩn danh') }}
                             </a>
-                            <ul class="dropdown-menu border-0 shadow-lg p-2 mt-2 rounded-4" style="background: rgba(255,255,255,0.95);">
-                                <li><a class="dropdown-item rounded-3 mb-1" href="/dashboard"><i class="fas fa-tachometer-alt me-2 text-muted"></i> Dashboard</a></li>
-                                <li><a class="dropdown-item rounded-3 mb-1" href="/products"><i class="fas fa-boxes me-2 text-muted"></i> Kho hàng</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item rounded-3 text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
+                            <ul class="dropdown-menu border-0 shadow-lg p-2 mt-3 rounded-4 dropdown-menu-end animate__animated animate__fadeInUp animate__faster">
+                                <li class="px-3 py-2 small text-muted fw-bold text-uppercase">Tài khoản</li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="/dashboard"><i class="fas fa-columns me-2 text-primary"></i> Bảng điều khiển</a></li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="/profile"><i class="fas fa-id-card me-2 text-info"></i> Hồ sơ ví</a></li>
+                                <li><hr class="dropdown-divider bg-light"></li>
+                                <li><a class="dropdown-item rounded-3 text-danger fw-bold" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a></li>
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="btn btn-lemon btn-sm rounded-pill px-4 shadow-sm" href="/login">
+                        <li class="nav-item ms-lg-3">
+                            <a class="btn btn-lemon rounded-pill px-4 py-2 shadow-lemon hover-up" href="/login">
                                 <i class="fas fa-wallet me-2"></i> Kết nối Ví
                             </a>
                         </li>
@@ -66,41 +91,84 @@
     </nav>
 
     {% block banner %}{% endblock %}
+    
+    {% block marquee %}{% endblock %}
 
-    <main class="py-4" style="min-height: 80vh;">
+    <main class="flex-grow-1">
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer-glass text-center">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-md-4 text-start">
-                    <h5 class="fw-bold text-dark mb-3">AgriChain Platform</h5>
-                    <p class="small text-muted mb-0">Hệ thống truy xuất nguồn gốc nông sản ứng dụng công nghệ Blockchain tiên tiến, đảm bảo sự minh bạch từ nông trại đến bàn ăn.</p>
-                </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold text-dark mb-3">Liên kết nhanh</h6>
-                    <ul class="list-unstyled d-flex flex-column gap-2">
-                        <li><a href="/" class="text-muted text-decoration-none hover-primary">Trang chủ</a></li>
-                        <li><a href="/dashboard" class="text-muted text-decoration-none hover-primary">Dành cho Nhà nông - Doanh nghiệp</a></li>
-                        <li><a href="/contact" class="text-muted text-decoration-none hover-primary">Hỗ trợ kỹ thuật</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 text-end">
-                    <h6 class="fw-bold text-dark mb-3">Liên hệ</h6>
-                    <p class="small text-muted mb-1"><i class="fas fa-envelope me-2 text-lemon"></i>chanhhiep.vn@gmail.com</p>
-                    <p class="small text-muted"><i class="fas fa-phone me-2 text-lemon"></i>(+84) 35 7379 334</p>
-                    <div class="mt-3">
-                        <a href="#" class="me-2 text-muted fs-5"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="me-2 text-muted fs-5"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-muted fs-5"><i class="fab fa-telegram"></i></a>
+    <footer class="footer-modern position-relative mt-5">
+        
+        <div class="custom-shape-divider-top">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
+        </div>
+
+        <div class="container pt-5 pb-4 position-relative" style="z-index: 2;">
+            <div class="row gy-5">
+                <div class="col-lg-4 col-md-6">
+                    <div class="mb-4">
+                        <span class="fs-3 fw-bolder text-white">Agri</span><span class="fs-3 fw-bolder text-warning">Chain</span>
+                    </div>
+                    <p class="text-white-50 mb-4 lh-lg">
+                        Nền tảng tiên phong ứng dụng Blockchain vào nông nghiệp, giúp minh bạch hoá quy trình từ nông trại đến bàn ăn, nâng tầm giá trị nông sản Việt.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="text-white fw-bold mb-4">Khám phá</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3">
+                        <li><a href="/" class="footer-link">Về chúng tôi</a></li>
+                        <li><a href="/products" class="footer-link">Tra cứu nguồn gốc</a></li>
+                        <li><a href="#" class="footer-link">Đối tác & Đầu tư</a></li>
+                        <li><a href="#" class="footer-link">Tin tức công nghệ</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="text-white fw-bold mb-4">Liên hệ</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 text-white-50">
+                        <li class="d-flex gap-3"><i class="fas fa-map-marker-alt mt-1 text-warning"></i> TP. Cần Thơ, Việt Nam</li>
+                        <li class="d-flex gap-3"><i class="fas fa-phone mt-1 text-warning"></i> (+84) 357 379 334</li>
+                        <li class="d-flex gap-3"><i class="fas fa-envelope mt-1 text-warning"></i> chanhhiep.vn@gmail.com</li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="text-white fw-bold mb-4">Bản tin</h5>
+                    <p class="text-white-50 small mb-3">Đăng ký để nhận báo cáo thị trường nông sản mới nhất.</p>
+                    <form class="position-relative">
+                        <input type="email" class="form-control rounded-pill py-3 pe-5 bg-white bg-opacity-10 border-0 text-white placeholder-light" placeholder="Email của bạn...">
+                        <button class="btn btn-warning rounded-circle position-absolute top-50 end-0 translate-middle-y me-1 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-paper-plane text-dark"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
-            <hr class="my-4 opacity-10">
-            <div class="small text-muted">© 2025 AgriChain Project. All rights reserved.</div>
+
+            <hr class="border-white opacity-10 my-5">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-white-50 small mb-0">© 2025 AgriChain. Built with <i class="fas fa-heart text-danger mx-1"></i> & Blockchain.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+                    <a href="#" class="text-white-50 small text-decoration-none me-3 hover-white">Điều khoản</a>
+                    <a href="#" class="text-white-50 small text-decoration-none hover-white">Bảo mật</a>
+                </div>
+            </div>
         </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
