@@ -2,7 +2,7 @@
 {% block title %}Chi tiết lô hàng{% endblock %}
 {% block content %}
 <div class="container py-4">
-    <div class="glass-box mb-4 position-relative overflow-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #065f46 0%, #10b981 100%);">
+    <div class="glass-box mb-4 position-relative overflow-hidden border-0 shadow-sm" style="z-index: 0; background: linear-gradient(135deg, #065f46 0%, #10b981 100%);">
         <div class="row align-items-center position-relative z-1">
             <div class="col-md-8 text-white">
                 <span class="badge bg-white bg-opacity-25 border border-white border-opacity-50 text-white mb-2">Private View</span>
@@ -30,7 +30,7 @@
             {% else %}
                 <div class="timeline-container ps-2">
                     {% for h in history %}
-                    <div class="glass-box mb-3 p-3 position-relative border-0 shadow-sm hover-shadow-sm transition-all" style="border-left: 4px solid var(--accent-color) !important;">
+                    <div class="glass-box mb-3 p-3 position-relative border-0 shadow-sm hover-shadow-sm transition-all" style=" z-index: 1; border-left: 4px solid var(--accent-color) !important;">
                         <div class="d-flex gap-3">
                             <div style="width: 80px; height: 80px; flex-shrink: 0;">
                                 {% if h.image_id %}
