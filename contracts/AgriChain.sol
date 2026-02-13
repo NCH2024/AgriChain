@@ -8,7 +8,7 @@ contract AgriChain {
         string batch_code;    // Mã lô hàng
         string product_type;  // Loại sản phẩm
         string action;        // Hành động
-        string details;       // Chi tiết (link ảnh, ghi chú)
+        string details;       // Chi tiết ( ghi chú)
         uint256 timestamp;    // Thời gian
         address owner;        // Ví của người ghi (Nông dân/Nhà máy)
     }

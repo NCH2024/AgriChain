@@ -24,6 +24,7 @@ db = DatabaseManager()
 register_wallet_routes(app, db)
 
 def fmt_ts(ts):
+    """Chuyển đổi timestamp (số nguyên) sang chuỗi ngày giờ định dạng dd/mm/YYYY HH:MM."""
     try:
         return datetime.datetime.fromtimestamp(int(ts)).strftime("%d/%m/%Y %H:%M")
     except:
@@ -32,6 +33,7 @@ def fmt_ts(ts):
 
 @app.template_filter('ctime')
 def timectime(s):
+    """Template filter: Định dạng timestamp trong giao diện HTML (Jinja2)."""
     try:
         if s is None:
             return ""
@@ -41,6 +43,7 @@ def timectime(s):
 
 @app.route('/generate_qr/<batch_code>')
 def generate_qr(batch_code):
+    """Tạo mã QR code trỏ đến trang truy xuất nguồn gốc (/trace/...) và trả về dưới dạng file ảnh."""
     link = f"{request.host_url}trace/{batch_code}"
     img = qrcode.make(link)
     buf = io.BytesIO()
@@ -50,10 +53,12 @@ def generate_qr(batch_code):
 
 @app.route('/login')
 def login():
+    """Hiển thị trang đăng nhập."""
     return render_template('login.html')
 
 @app.route('/api/login_wallet', methods=['POST'])
 def api_login_wallet():
+    """API xử lý đăng nhập: Kiểm tra ví trong DB, thiết lập session nếu ví hợp lệ."""
     data = request.get_json(force=True)
     wallet_address = data.get('wallet')
     
@@ -73,18 +78,21 @@ def api_login_wallet():
 
 @app.route('/logout')
 def logout():
+    """Đăng xuất: Xóa session và chuyển hướng về trang login."""
     session.clear()
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @require_wallet
 def dashboard():
+    """Trang Dashboard: Lấy dữ liệu từ Blockchain, lọc theo ví người dùng và hiển thị thống kê biểu đồ."""
     wallet = session.get("wallet")
     role = session.get("role")
 
     all_chain = web3_connect.lay_danh_sach_blockchain() or []
     my_products = [p for p in all_chain if str(p.get("owner","")).lower() == str(wallet).lower()]
 
+    # Vòng lặp xử lý hiển thị thời gian cho từng sản phẩm
     for p in my_products:
         try:
             ts = int(p.get("timestamp", 0) or 0)
@@ -92,9 +100,11 @@ def dashboard():
         except Exception:
             p["timestamp_fmt"] = ""
 
+    # Tính toán thống kê số lượng theo loại sản phẩm để vẽ biểu đồ
     thong_ke = {}
     for p in my_products:
         loai = p.get('product_type', 'Chưa xác định')
+        # Nếu chưa có trong dict thì gán 0, sau đó cộng thêm 1
         thong_ke[loai] = thong_ke.get(loai, 0) + 1
     labels = list(thong_ke.keys())
     data = list(thong_ke.values())
@@ -115,6 +125,7 @@ def dashboard():
 @app.route("/api/tx_record", methods=["POST"])
 @require_wallet
 def api_tx_record():
+    """API lưu metadata giao dịch (Hash, Ảnh, Action) vào MongoDB sau khi ghi thành công lên Blockchain."""
     data = request.get_json(force=True)
     wallet = session["wallet"]
 
@@ -134,6 +145,7 @@ def api_tx_record():
 @app.route("/products")
 @require_wallet
 def products():
+    """Hiển thị danh sách các lô hàng (sản phẩm) của người dùng, gom nhóm theo mã lô (batch_code)."""
     wallet = session["wallet"]
 
     pipeline = [
@@ -159,6 +171,7 @@ def products():
 @app.route("/products/<batch_code>")
 @require_wallet
 def product_detail(batch_code):
+    """Chi tiết lô hàng (Admin/Owner): Kết hợp dữ liệu bất biến từ Blockchain với hình ảnh/hash từ MongoDB."""
     wallet = session["wallet"]
     owned = db.db.user_txs.find_one({"wallet": wallet, "batch_code": batch_code})
     if not owned:
@@ -174,9 +187,11 @@ def product_detail(batch_code):
     # 2. Lấy Transaction Local để map (Lấy hết, không cần điều kiện có ảnh)
     local_txs = list(db.db.user_txs.find({"batch_code": batch_code}))
 
-    # 3. Vòng lặp ghép thông tin (Ảnh + Tx Hash)
+    # 3. Vòng lặp ghép thông tin (Ảnh + Tx Hash) từ DB vào dữ liệu Blockchain
+    # Logic: Blockchain giữ sự thật (Action, Time), DB giữ bằng chứng phụ (Ảnh, Hash)
     for h in history:
         try:
+            # Format lại thời gian hiển thị
             ts = int(h.get("timestamp", 0) or 0)
             h["timestamp_fmt"] = datetime.datetime.fromtimestamp(ts).strftime("%d/%m/%Y %H:%M")
             
@@ -186,7 +201,8 @@ def product_detail(batch_code):
             found_tx = None
             found_index = -1
             
-            # Tìm trong local_txs xem có cái nào khớp Action không
+            # Tìm trong local_txs xem có bản ghi nào khớp Action không
+            # (Duyệt qua danh sách local để tìm action tương ứng)
             for i, tx in enumerate(local_txs):
                 tx_action = tx.get("action", "").strip()
                 if tx_action == h_action:
@@ -195,14 +211,15 @@ def product_detail(batch_code):
                     found_index = i
                     break 
             
-            # Gắn dữ liệu tìm được vào h
+            # Nếu tìm thấy dữ liệu khớp trong DB Local
             if found_index != -1:
                 if found_img:
-                    h["image_id"] = found_img
+                    h["image_id"] = found_img # Gán ảnh vào record blockchain để hiển thị
                 if found_tx:
                     h["tx_hash"] = found_tx # Gắn Hash vào đây
                 
-                # Xoá để không trùng lặp
+                # Xoá bản ghi đã tìm thấy khỏi danh sách local để không dùng lại cho vòng lặp sau
+                # (Tránh trường hợp 2 hành động giống tên nhau bị map sai)
                 local_txs.pop(found_index)
                 
         except Exception as e:
@@ -227,6 +244,7 @@ def product_detail(batch_code):
 
 @app.route("/trace/<batch_code>")
 def trace_public(batch_code):
+    """Trang truy xuất công khai (Public): Cho phép người tiêu dùng xem lịch sử lô hàng mà không cần đăng nhập."""
     # 1. Lấy lịch sử từ Blockchain
     history = web3_connect.tim_kiem_blockchain(batch_code) or []
     try:
@@ -238,7 +256,7 @@ def trace_public(batch_code):
     # Lọc lấy các bản ghi có action để ghép
     local_txs = list(db.db.user_txs.find({"batch_code": batch_code}))
 
-    # 3. Vòng lặp ghép thông tin (Ảnh + Tx Hash)
+    # 3. Vòng lặp ghép thông tin (Ảnh + Tx Hash) tương tự như hàm product_detail
     for h in history:
         try:
             ts = int(h.get("timestamp", 0) or 0)
@@ -286,6 +304,7 @@ def trace_public(batch_code):
 
 @app.route('/api/upload_image', methods=['POST'])
 def api_upload_image():
+    """API Upload ảnh lên Cloudinary và lưu thông tin tham chiếu vào MongoDB."""
     if 'image' not in request.files:
         return {"ok": False, "error": "Không có file ảnh"}, 400
     file = request.files['image']
@@ -304,6 +323,7 @@ def api_upload_image():
 
 @app.route('/image/<image_id>')
 def get_image_redirect(image_id):
+    """Chuyển hướng (Redirect) từ ID ảnh nội bộ sang URL thực tế trên Cloudinary."""
     img = db.lay_anh(image_id)
     if img and 'url' in img:
         return redirect(img['url'])
@@ -312,11 +332,13 @@ def get_image_redirect(image_id):
 
 @app.route('/contact')
 def contact():
+    """Hiển thị trang liên hệ."""
     return render_template('contact.html')
 
 # --- ĐÂY LÀ HÀM INDEX DUY NHẤT (ĐÃ GỘP TÍNH NĂNG SLIDESHOW) ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """Trang chủ: Xử lý tìm kiếm mã lô trên Blockchain và hiển thị danh sách sản phẩm mới nhất từ DB."""
     # 1. Logic tìm kiếm (Chỉ chạy khi người dùng bấm nút tìm - Nên giữ Blockchain để chính xác nhất)
     ket_qua_tra_cuu = None
     if request.method == 'POST':
@@ -330,10 +352,12 @@ def index():
     # Thay vì gọi web3_connect, ta lấy từ collection user_txs
     raw_products = list(db.db.user_txs.find().sort("timestamp", -1).limit(100)) 
     
-    # Lọc lấy các lô hàng duy nhất (tránh hiện 1 lô nhiều lần nếu có nhiều update)
+    # Lọc lấy các lô hàng duy nhất (tránh hiện 1 lô nhiều lần nếu có nhiều hành động update)
+    # Sử dụng Dictionary để chỉ giữ lại bản ghi mới nhất của mỗi batch_code
     latest_map = {}
     for p in raw_products:
         code = p.get("batch_code")
+        # Nếu mã lô chưa có trong map thì thêm vào (vì đã sort timestamp giảm dần nên gặp đầu tiên là mới nhất)
         if code and code not in latest_map:
             try:
                 ts = int(p.get("timestamp", 0) or 0)
@@ -364,6 +388,7 @@ def index():
     
 @app.route('/profile')
 def profile():
+    """Trang hồ sơ cá nhân: Hiển thị thông tin user và số lượng giao dịch đã thực hiện."""
     # 1. Kiểm tra xem người dùng đã đăng nhập (kết nối ví) chưa
     if 'wallet' not in session:
         return redirect(url_for('login'))
@@ -379,6 +404,7 @@ def profile():
 
 @app.route('/api/delete_account', methods=['POST'])
 def delete_account():
+    """API xóa tài khoản người dùng hiện tại khỏi hệ thống."""
     if 'username' not in session:
         return jsonify({"ok": False, "msg": "Bạn chưa đăng nhập!"})
     
@@ -394,11 +420,14 @@ def delete_account():
 @app.route("/api/sync_blockchain", methods=["POST"])
 @require_wallet
 def sync_blockchain():
+    """API đồng bộ dữ liệu: Kéo dữ liệu từ Blockchain về MongoDB nếu local bị thiếu hoặc sai lệch."""
     wallet = session["wallet"]
 
     chain_data = web3_connect.lay_danh_sach_blockchain() or []
     mongo_data = list(db.db.user_txs.find({"wallet": wallet}))
 
+    # Tạo map để tra cứu nhanh (O(1)) thay vì dùng vòng lặp lồng nhau (O(n^2))
+    # Key là sự kết hợp của batch_code + action + timestamp để đảm bảo tính duy nhất
     mongo_map = {}
     for m in mongo_data:
         key = f"{m.get('batch_code')}|{m.get('action')}|{m.get('timestamp')}"
@@ -410,15 +439,18 @@ def sync_blockchain():
         "checked": len(chain_data)
     }
 
+    # Duyệt qua từng bản ghi trên Blockchain để so sánh với DB Local
     for c in chain_data:
         batch = c.get("batch_code")
         action = c.get("action")
         ts = int(c.get("timestamp", 0) or 0)
 
+        # Tạo key tương ứng để tra cứu trong mongo_map
         key = f"{batch}|{action}|{ts}"
 
         if key not in mongo_map:
             # 👉 Case 1: Blockchain có – MongoDB không có
+            # Hành động: Insert bổ sung vào MongoDB để đồng bộ
             db.db.user_txs.insert_one({
                 "wallet": wallet,
                 "batch_code": batch,
@@ -426,22 +458,23 @@ def sync_blockchain():
                 "action": action,
                 "timestamp": ts,
                 "tx_hash": c.get("tx_hash", ""),
-                "image_id": None,
+                "image_id": None, # Blockchain không lưu ảnh, nên để None
                 "synced_from_chain": True,
                 "saved_at": datetime.datetime.utcnow()
             })
             stats["added"] += 1
         else:
+            # Nếu đã có, kiểm tra xem dữ liệu có bị lệch không
             m = mongo_map[key]
             need_update = False
             update_fields = {}
 
-            # 👉 Case 2: thiếu product_type
+            # 👉 Case 2: DB thiếu product_type (do phiên bản cũ chưa lưu)
             if not m.get("product_type") and c.get("product_type"):
                 update_fields["product_type"] = c.get("product_type")
                 need_update = True
 
-            # 👉 Case 3: sai timestamp
+            # 👉 Case 3: sai timestamp (hiếm gặp, nhưng check cho chắc)
             if int(m.get("timestamp", 0)) != ts:
                 update_fields["timestamp"] = ts
                 need_update = True
